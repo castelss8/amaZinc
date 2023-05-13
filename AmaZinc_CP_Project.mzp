@@ -1,0 +1,16 @@
+{
+    "openFiles": [
+        "CP_PrimoModello.mzn",
+        "Data_example.dzn",
+        "Generator_file1.mzn"
+    ],
+    "openTab": 2,
+    "projectFiles": [
+        "CP_PrimoModello.mzn",
+        "Data_example.dzn",
+        "Generator_file1.mzn"
+    ],
+    "selectedBuiltinConfigId": "org.gecode.gecode",
+    "selectedBuiltinConfigVersion": "6.3.0",
+    "version": 106
+}
