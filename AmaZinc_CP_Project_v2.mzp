@@ -1,0 +1,16 @@
+{
+    "openFiles": [
+        "CP_v2.mzn",
+        "CP_v3.mzn",
+        "Data_example.dzn"
+    ],
+    "openTab": 0,
+    "projectFiles": [
+        "CP_v2.mzn",
+        "CP_v3.mzn",
+        "Data_example.dzn"
+    ],
+    "selectedBuiltinConfigId": "org.gecode.gecode",
+    "selectedBuiltinConfigVersion": "6.3.0",
+    "version": 106
+}
