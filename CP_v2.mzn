@@ -19,7 +19,7 @@ array[1..n+(2*m)] of var 1..n+(2*m): d; %array of successors of each item and of
 
 array[1..n+(2*m)] of var 1..m: v; %vehicles at each items
 
-array[1..n+(2*m)] of var 0..sum(i in 1..n)(s[i]) :q; %quantity of goods of courier that arrives at location i
+array[1..n+(2*m)] of var 0..max(i in 1..m)(l[i]) :q; %quantity of goods of courier that arrives at location i
 
 
 %CONSTRAINTS:
