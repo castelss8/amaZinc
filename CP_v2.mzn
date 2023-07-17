@@ -52,9 +52,10 @@ constraint forall(i in 1..n+m) (
 
 %Vehicles constraints:
 constraint forall(i in 1..m) (
-                    ( v[n+i]=v[n+m+i] ) /\ ( v[n+i] = i ) ); % /\ ( v[n+m+i] = i ) ??? %couriers for each starting and ending point
-                    
-                    
+                    ( v[n+i]=v[n+m+i] )); % /\ ( v[n+m+i] = i ) ??? %couriers for each starting and ending point
+
+constraint forall(i in 1..m) (           
+                    ( v[n+i] = i ) )
                     
 constraint forall(i in 1..n) (
                     v[p[i]]=v[i]);
@@ -73,7 +74,7 @@ constraint forall(i in 1..n) (
                     q[i]=q[p[i]]+s[i]);
 constraint forall(i in n+m+1..n+(2*m)) (
                     q[i]=q[p[i]]);
-
+                     
                     
 constraint forall(i in 1..n) (
                     if d[i]<=n then q[i]=q[d[i]]-s[d[i]] else q[i] = q[d[i]] endif ); %"quantity of goods" computation + BOUND CONSISTENCY??
