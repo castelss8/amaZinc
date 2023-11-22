@@ -25,14 +25,14 @@ array[1..n+(2*m)] of var 0..max(i in 1..m)(l[i]) :q; %quantity of goods of couri
 %CONSTRAINTS:
 
 constraint forall(i in 1..m) (
-                    p[n+i]=n+m+i);  %predecessors of starting points are corresponding ending point
+                    p[n+i]=n+m+i)::domain;  %predecessors of starting points are corresponding ending point
 constraint forall(i in 1..m) (
-                    d[n+m+i]=n+i); %successors of ending point
+                    d[n+m+i]=n+i)::domain; %successors of ending point
                     
                     
                     
-constraint alldifferent(p)::domain_propagation; %all different predecessors
-constraint alldifferent(d)::domain_propagation; %all different successors
+constraint alldifferent(p)::domain; %all different predecessors
+constraint alldifferent(d)::domain; %all different successors
 
 
 
@@ -40,48 +40,48 @@ constraint alldifferent(d)::domain_propagation; %all different successors
 
 %coherence constraints:
 constraint forall(i in 1..n) (
-                    d[p[i]]=i); %successor of the predecessor of i is i itself (for items)
+                    d[p[i]]=i)::domain; %successor of the predecessor of i is i itself (for items)
 constraint forall(i in n+m+1..n+(2*m)) (
-                    d[p[i]]=i); % same (for ending points)
+                    d[p[i]]=i)::domain; % same (for ending points)
                     
 constraint forall(i in 1..n+m) (
-                    p[d[i]]=i);  
+                    p[d[i]]=i)::domain;  
                     
                     
                     
 
 %Vehicles constraints:
 constraint forall(i in 1..m) (
-                    ( v[n+i]=v[n+m+i] )); % /\ ( v[n+m+i] = i ) ??? %couriers for each starting and ending point
+                    ( v[n+i]=v[n+m+i] ))::domain; % /\ ( v[n+m+i] = i ) ??? %couriers for each starting and ending point
 
 constraint forall(i in 1..m) (           
-                    ( v[n+i] = i ) )
+                    ( v[n+i] = i ) )::domain;
                     
 constraint forall(i in 1..n) (
-                    v[p[i]]=v[i]);
+                    v[p[i]]=v[i])::domain;
 constraint forall(i in n+m+1..n+(2*m)) (
-                    v[p[i]]=v[i]);
+                    v[p[i]]=v[i])::domain;
 constraint forall(i in 1..n+m) (
-                    v[d[i]]=v[i]); %routes constraints
+                    v[d[i]]=v[i])::domain; %routes constraints
 
 
 
 %Capacity constraints:
 constraint forall(i in n+1..n+m) (
-                    q[i]=0);
+                    q[i]=0)::domain;
 
 constraint forall(i in 1..n) (
-                    q[i]=q[p[i]]+s[i]);
+                    q[i]=q[p[i]]+s[i])::domain;
+                    
 constraint forall(i in n+m+1..n+(2*m)) (
-                    q[i]=q[p[i]]);
-                     
+                    q[i]=q[p[i]])::domain;     
                     
 constraint forall(i in 1..n) (
-                    if d[i]<=n then q[i]=q[d[i]]-s[d[i]] else q[i] = q[d[i]] endif ); %"quantity of goods" computation + BOUND CONSISTENCY??
+                    if d[i]<=n then q[i]=q[d[i]]-s[d[i]] else q[i] = q[d[i]] endif )::bounds; %"quantity of goods" computation + BOUND CONSISTENCY??
 
 
 constraint forall(i in 1..n+(2*m)) (
-                    q[i]<=l[v[i]] );
+                    q[i]<=l[v[i]] )::bounds;
 
 
 %COST FUNCTION
@@ -90,28 +90,24 @@ constraint forall(i in 1..n+(2*m)) (
 array[1..n+(2*m)] of var 0..(sum(i,j in 1..n)(D[i,j])): dists; %upper limit not optimal!
 
 constraint forall(i in n+1..n+m) (
-                    dists[i]=0);
-
-
+                    dists[i]=0)::domain;
 
 
 %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 %Computation of dists
 constraint forall(i in 1..n) (
-                    if p[i]>n then dists[i]=D[n+1,i] else dists[i]=dists[p[i]]+D[p[i],i] endif);
+                    if p[i]>n then dists[i]=D[n+1,i] else dists[i]=dists[p[i]]+D[p[i],i] endif)::domain;
                     
 constraint forall(i in n+m+1..n+(2*m)) (
                     if p[i]>n then dists[i]=0 else dists[i]=dists[p[i]]+D[p[i],n+1] endif
-                    );
+                    )::domain;
                     
 constraint forall(i in 1..n) (
-                    if d[i]>n then dists[i]=dists[d[i]]-D[i,n+1] else dists[i]=dists[d[i]]-D[i,d[i]] endif ); %starting points should be considered here??
+                    if d[i]>n then dists[i]=dists[d[i]]-D[i,n+1] else dists[i]=dists[d[i]]-D[i,d[i]] endif )::domain; %starting points should be considered here??
 
 constraint forall(i in n+1..n+m) (
                     if d[i]<=n then dists[d[i]]-D[n+1,d[i]]=0 else true endif
-                    );
-
-
+                    )::domain;
 
 
 var int: distance = max (i in n+m+1..n+(2*m)) ( dists[i] );
