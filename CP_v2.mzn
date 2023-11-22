@@ -1,3 +1,5 @@
+%% Best Performances: Random Seed, Free Search, Optimizer: -O5, Solver Configuration: OR Tools
+
 include "globals.mzn";
 
 int: n; %number of items
@@ -26,26 +28,28 @@ array[1..n+(2*m)] of var 0..max(i in 1..m)(l[i]) :q; %quantity of goods of couri
 
 constraint forall(i in 1..m) (
                     p[n+i]=n+m+i)::domain;  %predecessors of starting points are corresponding ending point
-constraint forall(i in 1..m) (
-                    d[n+m+i]=n+i)::domain; %successors of ending point
+                    
+constraint redundant_constraint(forall(i in 1..m) (
+                    d[n+m+i]=n+i))::domain; %successors of ending point
                     
                     
                     
 constraint alldifferent(p)::domain; %all different predecessors
-constraint alldifferent(d)::domain; %all different successors
+
+constraint redundant_constraint(alldifferent(d)); %::domain; %all different successors
 
 
 
 % domain_propagation??
 
 %coherence constraints:
-constraint forall(i in 1..n) (
-                    d[p[i]]=i)::domain; %successor of the predecessor of i is i itself (for items)
-constraint forall(i in n+m+1..n+(2*m)) (
-                    d[p[i]]=i)::domain; % same (for ending points)
+constraint redundant_constraint(forall(i in 1..n) (
+                    d[p[i]]=i)); %::domain; %successor of the predecessor of i is i itself (for items)
+constraint redundant_constraint(forall(i in n+m+1..n+(2*m)) (
+                    d[p[i]]=i)); %::domain; % same (for ending points)
                     
-constraint forall(i in 1..n+m) (
-                    p[d[i]]=i)::domain;  
+constraint redundant_constraint(forall(i in 1..n+m) (
+                    p[d[i]]=i)); %::domain;  
                     
                     
                     
@@ -57,12 +61,16 @@ constraint forall(i in 1..m) (
 constraint forall(i in 1..m) (           
                     ( v[n+i] = i ) )::domain;
                     
+constraint redundant_constraint(forall(i in 1..m) (v[n+m+i] = i));
+                    
 constraint forall(i in 1..n) (
                     v[p[i]]=v[i])::domain;
+                    
 constraint forall(i in n+m+1..n+(2*m)) (
                     v[p[i]]=v[i])::domain;
-constraint forall(i in 1..n+m) (
-                    v[d[i]]=v[i])::domain; %routes constraints
+                    
+constraint redundant_constraint(forall(i in 1..n+m) (
+                    v[d[i]]=v[i])); %::domain; %routes constraints
 
 
 
@@ -74,10 +82,11 @@ constraint forall(i in 1..n) (
                     q[i]=q[p[i]]+s[i])::domain;
                     
 constraint forall(i in n+m+1..n+(2*m)) (
-                    q[i]=q[p[i]])::domain;     
+                    q[i]=q[p[i]])::domain;  
+                   
                     
-constraint forall(i in 1..n) (
-                    if d[i]<=n then q[i]=q[d[i]]-s[d[i]] else q[i] = q[d[i]] endif )::bounds; %"quantity of goods" computation + BOUND CONSISTENCY??
+constraint redundant_constraint(forall(i in 1..n) (
+                    if d[i]<=n then q[i]=q[d[i]]-s[d[i]] else q[i] = q[d[i]] endif ))::bounds; %"quantity of goods" computation + BOUND CONSISTENCY??
 
 
 constraint forall(i in 1..n+(2*m)) (
@@ -87,7 +96,11 @@ constraint forall(i in 1..n+(2*m)) (
 %COST FUNCTION
 
 %dists
-array[1..n+(2*m)] of var 0..(sum(i,j in 1..n)(D[i,j])): dists; %upper limit not optimal!
+%array[1..n+(2*m)] of var 0..(sum(i,j in 1..n where i<j)(D[i,j])): dists; %upper and lower limit not optimal!
+
+array[1..n] of int: max_D=[max([D[i,j] | j in 1..i]) | i in 1..n];
+int: up_bound=sum(i in 1..n)(max_D[i]);
+array[1..n+(2*m)] of var 0..up_bound: dists; %Alternative upper bound. No real improvement :(
 
 constraint forall(i in n+1..n+m) (
                     dists[i]=0)::domain;
@@ -102,12 +115,12 @@ constraint forall(i in n+m+1..n+(2*m)) (
                     if p[i]>n then dists[i]=0 else dists[i]=dists[p[i]]+D[p[i],n+1] endif
                     )::domain;
                     
-constraint forall(i in 1..n) (
-                    if d[i]>n then dists[i]=dists[d[i]]-D[i,n+1] else dists[i]=dists[d[i]]-D[i,d[i]] endif )::domain; %starting points should be considered here??
+constraint redundant_constraint(forall(i in 1..n) (
+                    if d[i]>n then dists[i]=dists[d[i]]-D[i,n+1] else dists[i]=dists[d[i]]-D[i,d[i]] endif ))::domain; %starting points should be considered here??
 
-constraint forall(i in n+1..n+m) (
+constraint redundant_constraint(forall(i in n+1..n+m) (
                     if d[i]<=n then dists[d[i]]-D[n+1,d[i]]=0 else true endif
-                    )::domain;
+                    ))::domain;
 
 
 var int: distance = max (i in n+m+1..n+(2*m)) ( dists[i] );
