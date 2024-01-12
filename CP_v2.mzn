@@ -125,4 +125,6 @@ constraint redundant_constraint(forall(i in n+1..n+m) (
 
 var int: distance = max (i in n+m+1..n+(2*m)) ( dists[i] );
 
+
+
 solve minimize distance ;

@@ -1,14 +1,17 @@
 {
     "openFiles": [
         "CP_v2.mzn",
-        "CP_v3.mzn",
-        "Data_example.dzn"
+        "Data_example.dzn",
+        "MatrixVsArray.mzn",
+        "Data_example2.dzn"
     ],
-    "openTab": 0,
+    "openTab": 2,
     "projectFiles": [
         "CP_v2.mzn",
         "CP_v3.mzn",
-        "Data_example.dzn"
+        "Data_example.dzn",
+        "Data_example2.dzn",
+        "MatrixVsArray.mzn"
     ],
     "selectedBuiltinConfigId": "org.gecode.gecode",
     "selectedBuiltinConfigVersion": "6.3.0",
