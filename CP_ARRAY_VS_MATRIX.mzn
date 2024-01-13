@@ -19,7 +19,7 @@ array[1..n+1,1..n+1] of int: D; %Matrix of the distances
 
 %MATRIX ----------------------------------------------------------------------------
 
-%/*
+/*
 
 array[1..m, 1..n] of var 0..1 : V_new;
 
@@ -35,11 +35,11 @@ constraint forall(i in 1..m) (
 
 solve satisfy;
 
-%*/
+*/
 
 %ARRAY -----------------------------------------------------------------------------
 
-/*
+%/*
 
 array[1..n] of var 1..m: v;
 
@@ -47,11 +47,31 @@ array[1..m, 1..n] of var 0..(sum(i in 1..n)(s[i])): q;
 
 constraint forall(i in 1..m) (if i==v[1] then q[i,1] = s[1] else q[i,1] = 0 endif);
 
-constraint forall(i in 1..m, j in 2..n) (if v[j]==i then q[i,j] = q[i,j-1]+s[j] else q[i,j] = q[i,j-1] endif);
+constraint forall(i in 1..m, j in 2..n) (if v[j]==i then q[i,j] = q[i,j-1]+s[j] else q[i,j] = q[i,j-1] endif)::bounds;
 
 constraint forall(i in 1..m) (q[i,n]<=l[i] )::bounds;
 
-solve satisfy;
+function var 0..100: f(var 1..100: x) = 
+  let {
+        var 0..100: G;
+        constraint G=discrete_distribution([1,1,1,1,1,1,1]);
+  /*
+        array[1..5] of var 1..100: C;
+        constraint (forall(i in 1..5) (C[i]=(bernoulli(0.2)*i)));
+        var 1..100: G;
+        constraint (G=max(i in 1..5)(C[i]));
+        
+        */
+        
+    } in x+G;
+    
+var 2..5: prova;
+var 1..100:x;
+%constraint prova=f(x);
+    
+    
 
-*/
+solve maximize f(x);
+
+%*/
 
