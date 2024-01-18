@@ -42,6 +42,11 @@ constraint redundant_constraint(alldifferent(d)); %::domain; %all different succ
 
 % domain_propagation??
 
+%no_loops constraint (TODO)
+array[1..n] of var 1..n: no_loops
+
+constraint forall(i in 1..n) ()
+
 %coherence constraints:
 constraint redundant_constraint(forall(i in 1..n) (
                     d[p[i]]=i)); %::domain; %successor of the predecessor of i is i itself (for items)
