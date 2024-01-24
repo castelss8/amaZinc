@@ -1,0 +1,77 @@
+01) n=6, m=2, obj=14, 
+sum([ media in ogni riga di D ])=25.14, 
+sum([ max in ogni riga di D ]) = 44, 
+sum([ min in ogni riga di D ]) = 12
+mean( [mean(D[n][:-1]), mean([D[i][n] for i in range(n)]) ] )*m) = 6.5
+mean( [min(D[n][:-1]), min([D[i][n] for i in range(n)]) ] )*m) = 4.0
+
+02) n=9, m=6, obj=226,
+sum([ media in ogni riga di D ])=848.6, 
+sum([ max in ogni riga di D ]) = 1568, 
+sum([ min in ogni riga di D ]) = 294
+mean( [mean(D[n][:-1]), mean([D[i][n] for i in range(n)]) ] )*m)  = 486.0
+mean( [min(D[n][:-1]), min([D[i][n] for i in range(n)]) ] )*m) = 192.0
+
+03) n=7, m=3, obj=12,
+sum([ media in ogni riga di D ])=30.875, 
+sum([ max in ogni riga di D ]) = 51, 
+sum([ min in ogni riga di D ]) = 20
+mean( [mean(D[n][:-1]), mean([D[i][n] for i in range(n)]) ] )*m)  = 9.8
+mean( [min(D[n][:-1]), min([D[i][n] for i in range(n)]) ] )*m) = 6
+
+04) n=10, m=8, obj=220,
+sum([ media in ogni riga di D ])=682.90, 
+sum([ max in ogni riga di D ]) = 1284, 
+sum([ min in ogni riga di D ]) = 326
+mean( [mean(D[n][:-1]), mean([D[i][n] for i in range(n)]) ] )*m)  = 423.6
+mean( [min(D[n][:-1]), min([D[i][n] for i in range(n)]) ] )*m) = 136.0
+
+05) n=3, m=2, obj=206,
+sum([ media in ogni riga di D ])=200.5, 
+sum([ max in ogni riga di D ]) = 351, 
+sum([ min in ogni riga di D ]) = 162
+mean( [mean(D[n][:-1]), mean([D[i][n] for i in range(n)]) ] )*m)  = 146.6
+mean( [min(D[n][:-1]), min([D[i][n] for i in range(n)]) ] )*m) = 120.0
+
+06) n=8, m=6, obj=322,
+sum([ media in ogni riga di D ])=730.3, 
+sum([ max in ogni riga di D ]) = 1377, 
+sum([ min in ogni riga di D ]) = 224
+mean( [mean(D[n][:-1]), mean([D[i][n] for i in range(n)]) ] )*m)  = 508.5
+mean( [min(D[n][:-1]), min([D[i][n] for i in range(n)]) ] )*m) = 156
+
+07) n=17, m=6, obj= (max=600 -> 174 in 10 minuti) (max=176 -> 172 in 10 minuti),
+sum([ media in ogni riga di D ])=873.27, 
+sum([ max in ogni riga di D ]) = 1464, 
+sum([ min in ogni riga di D ]) = 338
+mean( [mean(D[n][:-1]), mean([D[i][n] for i in range(n)]) ] )*m)  = 290.47
+mean( [min(D[n][:-1]), min([D[i][n] for i in range(n)]) ] )*m) = 96.0
+
+08) n=10, m=8, obj= 186,
+sum([ media in ogni riga di D ])=766.54, 
+sum([ max in ogni riga di D ]) = 1379, 
+sum([ min in ogni riga di D ]) = 335
+mean( [mean(D[n][:-1]), mean([D[i][n] for i in range(n)]) ] )*m)  = 501.6
+mean( [min(D[n][:-1]), min([D[i][n] for i in range(n)]) ] )*m) = 296.0
+
+09) n=13, m=10, obj= (max=617 -> 436 in 10 minuti) (metodo dei cluster: 502 in 10 secondi),
+sum([ media in ogni riga di D ])=1360.85, 
+sum([ max in ogni riga di D ]) = 2981, 
+sum([ min in ogni riga di D ]) = 331
+mean( [mean(D[n][:-1]), mean([D[i][n] for i in range(n)]) ] )*m)  = 818.46
+mean( [min(D[n][:-1]), min([D[i][n] for i in range(n)]) ] )*m) = 150
+
+10) n=13, m=10, obj= (244 in 5 minuti, anche con 250 come max) (metodo dei cluster: 315 in 20 secondi),
+sum([ media in ogni riga di D ])=983.28, 
+sum([ max in ogni riga di D ]) = 1755, 
+sum([ min in ogni riga di D ]) = 353
+mean( [mean(D[n][:-1]), mean([D[i][n] for i in range(n)]) ] )*m)  = 719.23
+mean( [min(D[n][:-1]), min([D[i][n] for i in range(n)]) ] )*m) = 270
+
+11) n=143, m=20, obj= (non finisce in 5 min) (metodo dei cluster: 803 con 3 clusters in 5 min, 1422 con 5 clusters,  con 4 cluster),
+sum([ media in ogni riga di D ])=12525.56, 
+sum([ max in ogni riga di D ]) = 27504, 
+sum([ min in ogni riga di D ]) = 1138
+mean( [mean(D[n][:-1]), mean([D[i][n] for i in range(n)]) ] )*m)  = 1274.68
+mean( [min(D[n][:-1]), min([D[i][n] for i in range(n)]) ] )*m) = 40.0
+
