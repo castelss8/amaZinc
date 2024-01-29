@@ -34,7 +34,7 @@ def prim(G):
     return sum
 
 #Read instance from file 
-f_name = "Instances/inst02"
+f_name = "Instances/inst01"
 with open(f_name + ".dat", "r") as f:
     lines = f.readlines()
 
@@ -60,7 +60,7 @@ try:
       #Gurobi matrix of predecessors, boolean
    '''
     #pred = model.addMVar(shape=(n+1, n+1), vtype=GRB.BINARY, name="pred")
-    pred = [[model.addVar(vtype=GRB.BINARY) for _ in range(n+1)] for _ in range(n+1)]
+    pred = [[model.addVar(vtype=GRB.BINARY) for _ in range(n+m)] for _ in range(n+m)]
     
     '''
       vehicle matrix 
@@ -70,7 +70,7 @@ try:
       #create a [m x (n+m)] matrix v. v[i][j]==True if the i-th courier takes the j-th item (or starting/ending point)
     ''' 
     #v = model.addMVar(shape=(m, n+m), vtype=GRB.BINARY, name="v")
-    v = [[model.addVar(vtype=GRB.BINARY) for _ in range(n)] for _ in range(m)]
+    v = [[model.addVar(vtype=GRB.BINARY) for _ in range(n+m)] for _ in range(m)]
 
     #vector to avoid loops, lenght n
     #no_loops = model.addMVar(shape=(n), lb=1, ub=n, vtype=GRB.INTEGER, name="no_loops")
