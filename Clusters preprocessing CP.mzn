@@ -16,7 +16,7 @@ constraint forall(i in 1..k,j in (c[i]+1)..max(c))(C_opt[i,j] = n+1); %if the cl
 constraint forall(i in 1..k) (forall(j in 1..c[i])(exactly_int(one,C_opt[i,1..c[i]], C[i,j])==true)); %for every cluster, exactly one element in C_opt takes the value of each element of C
 constraint forall(i in 1..k)(d[i] = D[n+1,C_opt[i,1]+1] + sum(j in 2..c[i])(D[C_opt[i,j-1]+1,C_opt[i,j]+1]) + D[C_opt[i,c[i]],n+1]+1); %sum of distances in each cluster
 
-solve minimize sum(i in 1..k)(d[i]);
+solve minimize max(i in 1..k)(d[i]);
 
 
 
