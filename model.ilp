@@ -1,0 +1,10 @@
+\ Model LP_Model_copy
+\ LP format - for model browsing. Use MPS format to capture full model detail.
+Minimize
+ 
+Subject To
+ PR_2: 10 PR_2 = 1
+Bounds
+Binaries
+ PR_2
+End
