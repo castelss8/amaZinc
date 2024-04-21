@@ -35,7 +35,7 @@ constraint alldifferent(p)::domain_propagation; %all different predecessors
 %constraints on vehicle
 int: one = 1;
 
-constraint forall(i in 1..m)(fzn_at_least_int(one,v[1..n],i));
+constraint forall(i in 1..m)(fzn_at_least_int(one,v[1..n],i)); %Ogni corriere deve prendere almeno un pacco
 
 constraint forall(i in 1..m) (
                     ( v[n+i]=v[n+m+i] ) /\ ( v[n+i] = i ) )::domain; 
