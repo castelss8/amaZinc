@@ -5,7 +5,7 @@ import numpy as np
 import numpy as np
 
 #Read instance from file 
-f_name = "Instances/inst01"
+f_name = "Instances/inst11"
 with open(f_name + ".dat", "r") as f:
     lines = f.readlines()
 
@@ -22,7 +22,7 @@ D = [[int(x) for x in line.split()] for line in lines[4:]] #%matrix of distances
 
 try:
     #Model Initialization
-    model = gp.Model("MIP_Model")
+    model = gp.Model("MIP_Model_Gurobi")
 
     #Constraints
     #model.addConstr(obj >= lower_bound)
@@ -47,14 +47,15 @@ try:
     for j in range(m):
         for i in range(m):
             if j == i:
-                model.addConstr(v[i][n+j] == 1)
+                model.addConstr(v[i][n+j] == 1, f"v_{n+j}")
             else:
-                model.addConstr(v[i][n+j] == 0)
+                model.addConstr(v[i][n+j] == 0, f"v_{n+j}")
     
+    #print("l: ", l)
     #Constraint fot the capacity of each courrier (peso)
     for c in range(m):
-        print("constraint peso ", quicksum(v[c][i]*s[i] for i in range(n)) <= l[c])
-        model.addConstr(quicksum(v[c][i]*s[i] for i in range(n)) <= l[c])
+        #print("constraint peso ", quicksum(v[c][i]*s[i] for i in range(n)) <= l[c])
+        model.addConstr(quicksum(v[c][i]*s[i] for i in range(n)) <= l[c], f"peso_{c}")
 
     '''
       pred matrix
@@ -70,94 +71,63 @@ try:
     #j=0 to j=n+m-1 
     for i in range(n+m):
         col_i = [pred[j][i] for j in range(n+m)]
-        model.addConstr(sum(col_i) == 1, f"PC_{i}")
-        model.addConstr(sum(pred[i]) == 1, f"PR_{i}")
+        model.addConstr(quicksum(col_i) == 1, f"PC_{i}")
+        model.addConstr(quicksum(pred[i]) == 1, f"PR_{i}")
 
     #Constraint coerenza courier - predecessore/successore
     for c in range(m):
         for i in range(n+m):
             for j in range(n+m):
-                model.addConstr(v[c][j] >= v[c][i] + pred[i][j] - 1)
+                model.addConstr(v[c][j] >= v[c][i] + pred[i][j] - 1, f"coerenza_{c}_{i}_{j}")
+                #se v[c][i] v pred[i][j] => v[c][j]
                 #se v[c][i] e pred[i][j] sono entrambi 1, allora v[c][j] deve essere almeno 2, ma poiché è una variabile binaria, deve essere 1. Se uno o entrambi sono 0, allora v[c][j] può essere 0 o 1.
-   
+    
     #vector to avoid loops, lenght n
     no_loops = [model.addVar(lb=1, ub=n, vtype=GRB.INTEGER, name=f"no_loops") for _ in range(n)]
+    model.update()
     for i in range(n):
         for j in range(n):
-            if pred[i][j]: #if pred[i][j] is true 
-                model.addConstr(no_loops[i] > no_loops[j])
+            #if pred[i][j] == 1 then no_loops[i] - no_loops[j] >= 1
+            #if pred[i][j] == 0 then 0 - 0 - 0 >= 0
+            model.addConstr(no_loops[i]*pred[i][j] - no_loops[j]*pred[i][j] - pred[i][j] >= 0, f"no_loops_{i}_{j}")
     
-    #vector of distances
+    #vector of distances for each courier
     dist_vector = []
     for courier in range(m):
         dist_vector.append(model.addVar(vtype=GRB.INTEGER, name="dist_vector"))
+    
+    model.update()
 
     # Creare le espressioni per i punti di partenza, di arrivo e intermedi
     for courier in range(m):
-        starting_point = [quicksum((pred[item][n+courier] == 1) * D[n][item] for item in range(n))]
-        ending_point = [quicksum((pred[n+courier][item] == 1) * D[item][n] for item in range(n))]
-        mid_points = [quicksum((v[courier][i] == 1 and pred[i][j] == 1) * D[j][i] for i in range(n) for j in range(n))]
-        distance_of_this_path = quicksum(starting_point + mid_points + ending_point)
-        model.addConstr(dist_vector[courier] == distance_of_this_path)
+        #starting_point = quicksum((pred[item][n+courier]) * D[n][item] for item in range(n))
+        #ending_point = quicksum((pred[n+courier][item]) * D[item][n] for item in range(n))
+        #mid_points = quicksum((v[courier][i] * pred[i][j]) * D[j][i] for i in range(n) for j in range(n))
+        #distance_of_this_path = quicksum(starting_point + mid_points + ending_point)
+        model.addConstr(dist_vector[courier] - (quicksum((pred[item][n+courier]) * D[n][item] for item in range(n))+
+                                                quicksum((pred[n+courier][item]) * D[item][n] for item in range(n))+
+                                                quicksum((v[courier][i] * pred[i][j]) * D[j][i] for i in range(n) for j in range(n))) == 0, 
+                                                f"dist_vector_{courier}")
 
     # Creare la variabile max_dist e impostarla come massimo di dist_vector
     max_dist = model.addVar(vtype=GRB.INTEGER, name="max_dist")
-    model.addGenConstrMax(max_dist, dist_vector, name="max_dist")
+    model.update()
+    # Creare il vincolo per max_dist, prende il massimo valore di dist_vector
+    model.addGenConstrMax(max_dist, dist_vector, name="max_dist_constraint")
+
 
     # Impostare l'obiettivo del modello per minimizzare max_dist
     model.setObjective(max_dist, GRB.MINIMIZE)
 
-     
     #Solver
     model.optimize()
 
     #model.computeIIS()
     #model.write("model.ilp")
     
-    '''
-    # The deposit has at most n predecessor and it is predecessor of at most n items
-    col_n = []
-    for j in range(n+m):
-        col_n += [pred[j][n]]
-    PR_n = model.addVar(vtype=GRB.BINARY, name=f"PR_{n}") #pred row (predecessors of the deposit -- last item of each courier)
-    PC_n = model.addVar(vtype=GRB.BINARY, name=f"PC_{n}") #pred col (items that have deposit as predecessor -- first items of each courier)
-    model.addConstr(sum(PR_n for i in pred[n+m]) <= m, f"PR_{n}") #constraint for the deposit that has at most n predecessor
-    model.addConstr(sum(PC_n for i in col_n) <= m, f"PC_{n}") #constraint for the deposit that is predecessor of at most n items
-    #v[i[m+i]] = true e da lì in poi falso 
-    
-    # Each item has exactly one predecessor and each item is predecessor of exactly one other item
-    for i in range(n):
-        col_i = []
-        for j in range(n+1):
-            col_i += [pred[j][i]]
-        PC_i = model.addVar(vtype=GRB.BINARY, name=f"PC_{i}") #var for each item that has exactly one predecessor
-        PR_i = model.addVar(vtype=GRB.BINARY, name=f"PR_{i}") #var for each item that is predecessor of exactly one other item
-        model.addConstr(sum(PC_i for i in col_i) == 1, f"PC_{i}") #constraint for each item that has exactly one predecessor
-        model.addConstr(sum(PR_i for i in pred[i]) == 1, f"PR_{i}") #constraint for each item that is predecessor of exactly one other item
-
-    
-    
-    
-    #Se due items hanno come predecessore il deposito allora devono essere presi da due veicoli diversi
-    for i in range(n):
-        for j in range(i+1, n):
-            for k in range(m):
-                #genconstrindicator constraint che si applica solo quando var=True
-                model.addGenConstrIndicator(pred[i][n], True, v[k][i] + v[k][j] <= 1) #constraint for each pack that is carried by exactly one courrier
-                #Per ogni combinazione di i, j (con j sempre maggiore di i) e k: se pred[i][n] è True, allora la somma di v[k][i] e v[k][j] deve essere minore o uguale a 1
-                #Cioè se un certo elemento i è un predecessore di n, allora non può essere che sia v[k][i] che v[k][j] siano True (o, in termini di programmazione lineare intera, uguale a 1) allo stesso tempo
-
-    #loop avoidance
-    for i in range(n):
-        for j in range(n):
-            model.addGenConstrIndicator(pred[i][j], True, no_loops[i] - no_loops[j] >= 1) #constraint for each pack that is carried by exactly one courrier
-            #se pred[i][j] è True, allora il valore di no_loops[i] deve essere almeno uno più grande del valore di no_loops[j].
-    '''
-
 except gp.GurobiError as e:
 
     print('Error code ' + str(e.errno) + ": " + str(e))
-
 
 '''
 def prim(G):
