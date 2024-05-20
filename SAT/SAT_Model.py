@@ -5,7 +5,12 @@ from itertools import combinations
 from utils import *
 import math
 import time
-from objective_function import objective_function
+import sys
+from importlib import reload
+
+sys.path.append('/Users/mange/Documents/GitHub/Uni/amaZinc')
+from functions import objective_function as of
+reload(of)
 
 # Def of constraints
 def exactly_k(var: list[BoolRef], k: int):
@@ -102,7 +107,7 @@ def SAT_MCP(n, m, s, l, D):
         if solv.check()==sat:
             tmp_model = solv.model()
             item_pred, cour_item = [(i,j) for j in range(n+m) for i in range(n+m) if tmp_model.evaluate(pred[i][j])], [(i, j) for j in range(n) for i in range(m) if tmp_model.evaluate(cour[i][j])] #tmp_model.evaluate(c[i][j][0])
-            tmp_obj = objective_function(item_pred, cour_item, n, m, D)
+            tmp_obj = of.obj_fun(item_pred, cour_item, n, m, D)
             if tmp_obj<best_obj:
                 best_solution=tmp_model
                 best_obj=tmp_obj
@@ -111,31 +116,3 @@ def SAT_MCP(n, m, s, l, D):
             solv.pop()
         else:
             return best_solution, best_obj
-
-
-
-#TEMPORANEO:
-instance_n=2 #from 1 to 21
-#"C:\Users\mange\Documents\GitHub\Uni\amaZinc\SAT\Instances\inst01.dat"
-if instance_n<10:
-    file_name='inst0'+str(instance_n)+'.dat'
-else:
-    file_name='inst'+str(instance_n)+'.dat'
-file = open('/Users/mange/Documents/GitHub/Uni/amaZinc/SAT/Instances/inst02.dat', 'r')
-#file = open('./Instances/'+file_name, 'r')
-
-splitted_file = file.read().split('\n')
-
-m = int(splitted_file[0])
-n = int(splitted_file[1])
-cpt_tmp = list(map(int, splitted_file[2].split(' ')))
-tmp_sz=splitted_file[3].split(' ')
-if '' in tmp_sz:
-    sz_tmp=list(map(int, [tmp_sz[i] for i in range(len(tmp_sz)) if tmp_sz[i]!='']))
-else:
-    sz_tmp = list(map(int, splitted_file[3].split(' ')))
-D = [list(map(int, line.strip().split(' '))) for line in splitted_file[4:(n+5)]]
-
-print('Instance number '+str(instance_n)+': '+str(n)+' items and '+str(m)+' couriers.')
-SAT_MCP(n, m, sz_tmp, cpt_tmp, D)
-

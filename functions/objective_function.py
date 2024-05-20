@@ -1,4 +1,4 @@
-def objective_function(item_pred, cour_item, n, m, D):
+def obj_fun(item_pred, cour_item, n, m, D):
     distances=[0 for _ in range(m)]
 
     # (i,j) in item_pred => j is predecessor of i
