@@ -113,14 +113,15 @@ def complete_clustering(D, s, n, m):
     It create clusters by iterating the funtion one_clustering untill one cluster has more than n//m items or one_clustering can't find new clusters 
     '''
 
-    mean_num_of_items = (n // m)
+    #mean_num_of_items = (n // m)
+    mean_num_of_items = max(n//m, 2)
     D_new = D
     s_new = s
     clusters = [ [i] for i in range(n+1) ]
     backup_clusters = None
 
     if mean_num_of_items == 1:
-        return clusters, 0
+        return clusters, s
 
     while np.max( [len(clusters[i]) for i in range(len(clusters))] ) <= mean_num_of_items and clusters != backup_clusters:
         

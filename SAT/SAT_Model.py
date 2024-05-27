@@ -33,7 +33,7 @@ def big_SAT_Solver(n, m, s, l):
     for j in range(n):
         solv.add(exactly_one([cour[i][j] for i in range(m)]))
 
-    #The last m coulmns of cour are fixed: the courier cour starts and ends at the deposit n+cour
+    #The last m coulmns of cour are fixed: the courier c starts and ends at the deposit n+c
     for j in range(m):
         for i in range(m):
             if j==i:
@@ -42,9 +42,9 @@ def big_SAT_Solver(n, m, s, l):
                 solv.add(Not(cour[i][n+j]))
 
     #Weight constraint
-    for courier in range(m):
-        cour_weight = [cour[courier][item] for item in range(n) for _ in range(s[item])]
-        solv.add(at_most_k(cour_weight, l[courier]))
+    for c in range(m):
+        cour_weight = [cour[c][item] for item in range(n) for _ in range(s[item])]
+        solv.add(at_most_k(cour_weight, l[c]))
 
     #Create a (n+m)x(n+m) matrix: pred[i][j] = true if the j-th item is the predecessor of the i-th item. 
     #The n+c column in the matrix is the starting point of the c-th courier. The n+c row in the matrix is the ending point of the c-th courier
@@ -58,7 +58,7 @@ def big_SAT_Solver(n, m, s, l):
         solv.add(exactly_one(col_i))
         solv.add(exactly_one(pred[i]))
 
-    #If the courier cour has the item i and the item j is the predecessor of the item i then cour has the item j
+    #If the courier c has the item i and the item j is the predecessor of the item i then c has the item j
     for courier in range(m):
         solv.add(And(  [Implies(And([ cour[courier][i], pred[i][j]] ) , cour[courier][j]) for i in range(n+m) for j in range(n+m)]  ))
 
@@ -82,16 +82,12 @@ def small_SAT_Solver(n):
 
    solv= Solver()
    
-   '''
-      pred matrix  
-   '''
    #pred[i][j] = true if the j-th item is the predecessor of the i-th item. 
    #The n+i column in the matrix is the starting point of the i-th courier. The n+i row in the matrix is the ending point of the i-th courier
    pred = [[Bool(f"pred({i})_{j}")for j in range(n+1)]for i in range(n+1)]
 
    #Each item/ending point has exactly one predecessor and each item/starting point is predecessor of exactly one other item. 
-   #i=0 to i=n+m-1
-   #j=0 to j=n+m-1 
+
    for i in range(n+1):
       col_i = []
       for j in range(n+1):
@@ -135,6 +131,8 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
         print('starting default')
 
         solv, pred, cour = big_SAT_Solver(n, m, s, l)
+
+        print('built')
 
         # Time
         starting_time = time.time()
@@ -268,9 +266,9 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
 
         big_sol = SAT_MCP(n_new, m, s_clusters, l, D_new, 'default', timeout)
 
-        if big_sol['default']['optimal'] == True:
-            sol = sf.solution_maker_cluster(clusters, clusters_paths, first_items_for_clusters, big_sol['default']['sol'], m)
-            solutions['clustering'] = {'time' : int(time.time() - starting_time) , 'optimal' : False , 'obj' : sf.obj_fun_from_solution(sol, n, D) , 'sol' : sol} #Da cambiare!!!
+        if big_sol['default']['sol'] != []:
+            sol = sf.solution_maker_cluster(clusters, clusters_paths, first_items_for_clusters, big_sol['default']['sol'], m) #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            solutions['clustering'] = {'time' : int(time.time() - starting_time) , 'optimal' : False , 'obj' : sf.obj_fun_from_solution(sol, n, D) , 'sol' : sol} #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         
         else:
             solutions['clustering'] = {'time' : 300 , 'optimal' : False , 'obj' : 'N/A' , 'sol' : []}
@@ -288,7 +286,7 @@ if instance_n<10:
 else:
     file_name='inst'+str(instance_n)+'.dat'
 
-file = open('Documents/GitHub/Uni/amaZinc/SAT/Instances/inst07.dat')
+file = open('Documents/GitHub/Uni/amaZinc/SAT/Instances/inst10.dat')
 
 splitted_file = file.read().split('\n')
 
@@ -305,4 +303,4 @@ D = [list(map(int, line.strip().split(' '))) for line in splitted_file[4:(n+5)]]
 print('Instance number '+str(instance_n)+': '+str(n)+' items and '+str(m)+' couriers.')
 
 #print(SAT_MCP(n, m, s, l, D, ['clustering']))
-print(SAT_MCP(n, m, s, l, D, ['default', 'clustering']))
+print(SAT_MCP(n, m, s, l, D, ['clustering']))

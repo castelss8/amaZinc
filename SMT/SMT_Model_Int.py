@@ -196,8 +196,8 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                 solv.set('timeout', int(check_timeout_for_clustering*1000)) #time left in millisec 
                 solv.push()
 
-                points = [pred[i] == j for i in range(n) for j in range(n)]
-                distances = [D[j][i] for i in range(n) for j in range(n)]
+                points = [pred[i] == j for i in range(n_cluster) for j in range(n_cluster)]
+                distances = [D[j][i] for i in range(n_cluster) for j in range(n)]
 
                 points  = starting_point + ending_point + mid_points
                 distances = starting_point_distances + ending_point_distances + mid_points_distances
