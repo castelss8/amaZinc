@@ -1,0 +1,13 @@
+
+Gurobi 11.0.1 (mac64[x86], gurobi_cl) logging started Wed May  8 12:37:47 2024
+
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 11.0.1 (mac64[x86], gurobi_cl) logging started Wed May  8 12:48:24 2024
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2513665
+Set parameter LogFile to value "gurobi.log"
+Using license file /Library/gurobi1101/gurobi.lic
+Academic license 2513665 - for non-commercial use only - registered to ma___@studio.unibo.it
