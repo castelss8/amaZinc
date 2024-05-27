@@ -92,3 +92,7 @@ solve
  :: int_search(cour, dom_w_deg, indomain_random)
  :: restart_luby(250)
 minimize distance;
+
+output["pred = \(pred)\n"];
+output["cour = \(cour)\n"];
+output["distance = \(distance)\n"];
