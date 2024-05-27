@@ -93,3 +93,7 @@ solve
  :: restart_luby(250)
  :: relax_and_reconstruct(pred, 85)
 minimize distance;
+
+output["pred = \(pred)\n"];
+output["cour = \(cour)\n"];
+output["distance = \(distance)\n"];
