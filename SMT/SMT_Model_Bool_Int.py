@@ -22,29 +22,31 @@ def exactly_one(var: list[BoolRef]):
 def at_most_k(var: list[BoolRef], k: int):
     return PbLe([(v, 1) for v in var], k)
 
-def big_SAT_Solver(n, m, s, l):
+def max_z3(vec):
+  m = vec[0]
+  for value in vec[1:]:
+    m = If(value > m, value, m)
+  return m
+
+def big_SMT_Solver(n, m, s, l):
 
     solv= Solver()
 
-    #Create a m x (n+m) matrix cour: cour[i][j] ==True iff the i-th courier takes the j-th item (or starting/ending point).
-    cour=[[Bool(f"c({i})_{j})") for j in range(n+m)]for i in range(m)]
+    #Create a (n+m)-long array cour: cour[i] == j iff the i-th item (or starting/ending point) is taken by the j-th courier
+    cour = [Int(f"c{i}") for i in range(n+m)]
 
-    #Each pack have to be carried by exactly one courrier
-    for j in range(n):
-        solv.add(exactly_one([cour[i][j] for i in range(m)]))
+    #Set cour range
+    for i in range(n):
+        solv.add(cour[i] < m )
+        solv.add(cour[i] >= 0 )
 
-    #The last m coulmns of cour are fixed: the courier cour starts and ends at the deposit n+cour
-    for j in range(m):
-        for i in range(m):
-            if j==i:
-                solv.add(cour[i][n+j])
-            else:
-                solv.add(Not(cour[i][n+j]))
-
+    #The last m elements of cour are fixed: the courier cour starts and ends at the deposit n+cour
+    for i in range(m):
+        solv.add(cour[n+i] == i)
+    
     #Weight constraint
-    for courier in range(m):
-        cour_weight = [cour[courier][item] for item in range(n) for _ in range(s[item])]
-        solv.add(at_most_k(cour_weight, l[courier]))
+    for c in range(m):
+        solv.add(Sum([If(cour[i] == c, s[i], 0) for i in range(n)]) <= l[c])
 
     #Create a (n+m)x(n+m) matrix: pred[i][j] = true if the j-th item is the predecessor of the i-th item. 
     #The n+c column in the matrix is the starting point of the c-th courier. The n+c row in the matrix is the ending point of the c-th courier
@@ -59,22 +61,13 @@ def big_SAT_Solver(n, m, s, l):
         solv.add(exactly_one(pred[i]))
 
     #If the courier cour has the item i and the item j is the predecessor of the item i then cour has the item j
-    for courier in range(m):
-        solv.add(And(  [Implies(And([ cour[courier][i], pred[i][j]] ) , cour[courier][j]) for i in range(n+m) for j in range(n+m)]  ))
+    for c in range(m):
+        solv.add(And(  [Implies(And([ cour[i] == c, pred[i][j]] ) , cour[j] == c) for i in range(n+m) for j in range(n+m)]  ))
 
     #Create a list of length n no_loop: if the item j is predecessor of the item i then no_loop(i) as an integer is > than no_loop(j) as an integer 
-    nl_max = n//(m-1)+1
-    no_loops = [[Bool(f"no_loops({item})_{j}")for j in range(nl_max)]for item in range(n)]
-    for item in range(n):
-        for k in range(n//(m-1)+1):
-            solv.add(Implies(Not(no_loops[item][k]), Not(Or(no_loops[item][:k])))) #k=False then all the above are false --> if j<k is true then all the below are true
+    no_loops = [BitVec(f'no_loop{i}', 16) for i in range(n)]
+    solv.add(And([Implies(pred[i][j], no_loops[i]>no_loops[j]) for i in range(n) for j in range(n)]))
 
-    #Example: no_loops[j] = [1 1 1 1 1 1 1 0 0 0]
-    # If item_j is predecessor of item_j then no_loops[j]<no_loops[i] as integers    
-    for item_i in range(n):
-        for item_j in range(n):
-            solv.add(Implies(pred[item_i][item_j], Or([  And(no_loops[item_i][k], Not(no_loops[item_j][k])) for k in range(nl_max)  ])  ))
-    
     return solv, pred, cour
 
 
@@ -113,7 +106,7 @@ def small_SAT_Solver(n):
    return solv, pred
 
 
-def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 300):
+def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 300):
     """
     input
     - n : int = number of items
@@ -132,9 +125,7 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
 
     if 'default' in approaches:
 
-        print('starting default')
-
-        solv, pred, cour = big_SAT_Solver(n, m, s, l)
+        solv, pred, cour = big_SMT_Solver(n, m, s, l)
 
         # Time
         starting_time = time.time()
@@ -142,42 +133,43 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
         check_timeout = timeout-time.time() #Time left
         best_obj = sf.up_bound(n,D)
 
-        stop = False
-
-        while time.time() < timeout and not stop:
+        opt = False
+        while time.time() < timeout and not opt:
             solv.set('timeout', int(check_timeout*1000)) #time left in millisec 
 
             solv.push()
-            for courier in range(m):
-                tmp_dist = [And(cour[courier][item], pred[item][item_2]) for item in range(n) for item_2 in range(n) for _ in range(D[item_2][item])]
-                tmp_dist += [And(cour[courier][item], pred[item][n+courier]) for item in range(n) for _ in range(D[n][item])]
-                tmp_dist += [And(cour[courier][item], pred[n+courier][item]) for item in range(n) for _ in range(D[item][n])]
-                solv.add(at_most_k(tmp_dist, best_obj-1))
-            
-            
-            if solv.check()==sat: #If a new solution is found:
+
+            for c in range(m):
+                starting_point = [If(pred[item][n+c], D[n][item], 0) for item in range(n)]
+                ending_point = [If(pred[n+c][item], D[item][n], 0) for item in range(n)]
+                mid_points = [If(And(cour[i] == c, pred[i][j]), D[j][i], 0) for i in range(n) for j in range(n)]
+                distance_of_this_path = Sum(starting_point + mid_points + ending_point)
+                solv.add(distance_of_this_path < best_obj)
+
+            if solv.check()==sat:
                 tmp_model = solv.model()
-                item_pred, cour_item = [(i,j) for j in range(n+m) for i in range(n+m) if tmp_model.evaluate(pred[i][j])], [(i, j) for j in range(n) for i in range(m) if tmp_model.evaluate(cour[i][j])] 
-                tmp_obj = sf.obj_fun(item_pred, cour_item, n, m, D)
+                item_pred, cour_item = [(i,j) for j in range(n+m) for i in range(n+m) if tmp_model.evaluate(pred[i][j])], [(c, i) for i in range(n) for c in range(m) if tmp_model.evaluate(cour[i]).as_long() == c]
+                tmp_obj =sf.obj_fun(item_pred, cour_item, n, m, D)
                 if tmp_obj<best_obj:
+                    #best_solution=tmp_model
                     best_obj=tmp_obj
                 check_timeout = timeout-time.time() #Time left
                 solv.pop()
-
-            elif best_obj != sf.up_bound(n,D) and time.time() < timeout: #else (no new solutions are found), if it found at least one solution and there is still time then it has found the optimal solution!
+                print('sat', best_obj)
+            else:
+                item_pred, cour_item = [(i,j) for j in range(n+m) for i in range(n+m) if tmp_model.evaluate(pred[i][j])], [(c, i) for i in range(n) for c in range(m) if tmp_model.evaluate(cour[i]).as_long() == c]
                 solutions['default'] = {'time' : int(time.time() - starting_time) , 'optimal' : True , 'obj' : best_obj , 'sol' : sf.solution_maker(item_pred, cour_item, n, m)}
-                stop = True
+                opt = True
+                print('opt', best_obj)
 
-            elif best_obj != sf.up_bound(n,D): #else (no more solution and not optimal reached and no more time), if at least one solution was found:
-                solutions['default'] = {'time' : 300 , 'optimal' : False , 'obj' : best_obj, 'sol' : sf.solution_maker(item_pred, cour_item, n, m)}
-            
-            else: #no more solution and not optimal reached and no solution found at all
+        if not opt:
+            if best_obj == sf.up_bound(n,D):
                 solutions['default'] = {'time' : 300 , 'optimal' : False , 'obj' : 'N/A' , 'sol' : []}
-                stop = True   
+            else:
+                solutions['default'] = {'time' : 300 , 'optimal' : False , 'obj' : best_obj , 'sol' : sf.solution_maker(item_pred, cour_item, n, m)}
+        
     
     if 'clustering' in approaches:
-
-        print('starting clustering')
 
         clusters, s_clusters = cl.complete_clustering(D, s, n, m)
 
@@ -207,16 +199,15 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
 
             best_obj = sf.up_bound(n_cluster, D_clus)
 
-            stop = False
-
-            while time.time() < timeout_for_clustering and not stop:
+            opt = False
+            while time.time() < timeout_for_clustering and not opt:
                 solv.set('timeout', int(check_timeout_for_clustering*1000)) #time left in millisec 
                 solv.push()
 
                 tmp_dist = [pred[item][item_2] for item in range(n_cluster) for item_2 in range(n_cluster) for _ in range(D_clus[item_2][item])]
                 solv.add(at_most_k(tmp_dist, best_obj-1))
                 
-                if solv.check()==sat: #If a new solution for this cluster is found:
+                if solv.check()==sat:
                     tmp_model = solv.model()
                     item_pred = [(i,j) for j in range(n_cluster+1) for i in range(n_cluster+1) if tmp_model.evaluate(pred[i][j])]
                     tmp_obj = sf.obj_fun_clus(item_pred, n_cluster, D_clus)
@@ -225,24 +216,23 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                         best_obj=tmp_obj
                     check_timeout_for_clustering = timeout_for_clustering-time.time() #Time left
                     solv.pop()
-                elif best_obj != sf.up_bound(n_cluster, D_clus): #else (no new sol for this cluster) if at least one solutios was found save it
+                else:
                     cluster_copy=copy.deepcopy(cluster)
                     cluster_copy.append(-1)
                     clusters_paths.append([(cluster_copy[i],cluster_copy[j]) for i in range(n_cluster+1) for j in range(n_cluster+1) if best_model.evaluate(pred[i][j])])
-                    stop = True
-                else: #else (no new solution and it didn't found any solution at all) save a standard solution
-                    cluster_copy=copy.deepcopy(cluster)
-                    cluster_copy.append(-1)
-                    cluster_copy[:0] = [-1]
-                    clusters_paths.append([(cluster_copy[i],cluster_copy[i+1]) for i in range(n_cluster+1)])
-                    stop = True
-
+                    opt = True
+            if not opt:
+                cluster_copy=copy.deepcopy(cluster)
+                cluster_copy.append(-1)
+                clusters_paths.append([(cluster_copy[i],cluster_copy[j]) for i in range(n_cluster+1) for j in range(n_cluster+1) if best_model.evaluate(pred[i][j])])
+        
         n_new = len(clusters)-1
 
         first_items_for_clusters=[]
         last_item_for_clusters=[]
 
         
+
         i=0
         for clus in clusters:
             if len(clus)>1:
@@ -304,5 +294,4 @@ D = [list(map(int, line.strip().split(' '))) for line in splitted_file[4:(n+5)]]
 
 print('Instance number '+str(instance_n)+': '+str(n)+' items and '+str(m)+' couriers.')
 
-#print(SAT_MCP(n, m, s, l, D, ['clustering']))
-print(SAT_MCP(n, m, s, l, D, ['default', 'clustering']))
+print(SMT_MCP(n, m, s, l, D, ['default']))
