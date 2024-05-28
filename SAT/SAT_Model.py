@@ -267,17 +267,13 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
         big_sol = SAT_MCP(n_new, m, s_clusters, l, D_new, 'default', timeout)
 
         if big_sol['default']['sol'] != []:
-            sol = sf.solution_maker_cluster(clusters, clusters_paths, first_items_for_clusters, big_sol['default']['sol'], m) #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            solutions['clustering'] = {'time' : int(time.time() - starting_time) , 'optimal' : False , 'obj' : sf.obj_fun_from_solution(sol, n, D) , 'sol' : sol} #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            sol = sf.solution_maker_cluster(clusters, clusters_paths, first_items_for_clusters, big_sol['default']['sol'], m) 
+            solutions['clustering'] = {'time' : int(time.time() - starting_time) , 'optimal' : False , 'obj' : sf.obj_fun_from_solution(sol, n, D) , 'sol' : sol}
         
         else:
             solutions['clustering'] = {'time' : 300 , 'optimal' : False , 'obj' : 'N/A' , 'sol' : []}
 
     return solutions
-
-
-        
-
 
 instance_n=5 #from 1 to 21
 
@@ -286,7 +282,7 @@ if instance_n<10:
 else:
     file_name='inst'+str(instance_n)+'.dat'
 
-file = open('Documents/GitHub/Uni/amaZinc/SAT/Instances/inst10.dat')
+file = open('Documents/GitHub/Uni/amaZinc/SAT/Instances/inst04.dat')
 
 splitted_file = file.read().split('\n')
 
