@@ -270,7 +270,7 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
 
         
 
-
+'''
 instance_n=5 #from 1 to 21
 
 if instance_n<10:
@@ -295,3 +295,4 @@ D = [list(map(int, line.strip().split(' '))) for line in splitted_file[4:(n+5)]]
 print('Instance number '+str(instance_n)+': '+str(n)+' items and '+str(m)+' couriers.')
 
 print(SMT_MCP(n, m, s, l, D, ['default', 'clustering']))
+'''

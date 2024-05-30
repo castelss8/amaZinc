@@ -282,8 +282,8 @@ if instance_n<10:
 else:
     file_name='inst'+str(instance_n)+'.dat'
 
-file = open('Documents/GitHub/Uni/amaZinc/SAT/Instances/inst04.dat')
-
+file = open('Instances/inst04.dat')
+'''
 splitted_file = file.read().split('\n')
 
 m = int(splitted_file[0])
@@ -300,3 +300,4 @@ print('Instance number '+str(instance_n)+': '+str(n)+' items and '+str(m)+' cour
 
 #print(SAT_MCP(n, m, s, l, D, ['clustering']))
 print(SAT_MCP(n, m, s, l, D, ['clustering']))
+'''
