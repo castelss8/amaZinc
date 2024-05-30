@@ -19,6 +19,7 @@ def run_project():
     print("Combinatorial and Decision Making Optimization\nProject 1\n Student, Group 1, 2024")
 
     print("--- Choose the solving approach: ---\n")
+    #modify name of the models
     for i, model_name in enumerate(MODELS):
         print(f"Press {i} for: {model_name}")    
     index = int(input())
@@ -37,7 +38,7 @@ def run_project():
 
     print(model_name)
     print(instances)
-    #print(res_folder)
+    print(res_folder)
 
     run(model_name,instances, res_folder,output_graph, graph_folder)
 
