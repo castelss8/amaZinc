@@ -4,3 +4,4 @@ mip
 z3-solver
 gurobipy
 utils
+scipy
