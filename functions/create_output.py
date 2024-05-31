@@ -69,12 +69,12 @@ def run(
         elif model_name == "MIP_Normal":
             # Uncomment the following line when MIP_runner is available
             sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'default')
-            sol.append()
+            sol.append(sol_tmp)
             CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "MIP_Cluster":
             # Uncomment the following line when MIP_runner is available
             sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'clustering')
-            sol.append()
+            sol.append(sol_tmp)
             CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "SMT_Normal":
             sol_tmp = SMT_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'default')
