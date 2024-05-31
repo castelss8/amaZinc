@@ -1,18 +1,26 @@
+""" Smt Model for MCP
+
+This script contains the definition of two solvers (big_SMT_Solver and small_SAM_Solver) and the definition of a function (SMT_MCP) that uses the two solvers
+to find solutions for a given istances of the Multiple Courier Planning problem. Two approaches have been implemented: the first one ('default') search the
+optimal solution while the second one ('clustering') tries to reduce the dimension of the istance, hoping to find solutions quicklier and for larger istances.
+
+"""
+
 from z3 import *
 
-import numpy as np
-from itertools import combinations
+#import numpy as np
+#from itertools import combinations
 from utils import *
-import math
+#import math
 import time
 import sys
-from importlib import reload
+#from importlib import reload
 
-#sys.path.append('/Users/mange/Documents/GitHub/Uni/amaZinc')
+sys.path.append('/Users/mange/Documents/GitHub/Uni/amaZinc')
 from functions import sol_functions as sf
 from functions import clustering as cl 
 
-# Def of constraints
+""" TODO: da cancellare!
 def exactly_k(var: list[BoolRef], k: int):
     return PbEq([(v,1) for v in var], k)
 
@@ -27,95 +35,150 @@ def max_z3(vec):
   for value in vec[1:]:
     m = If(value > m, value, m)
   return m
+"""
 
 def big_SMT_Solver(n, m, s, l):
+    """ This function creates and returns a SMT solver that can find a correct solution of the MCP problem.
+
+    Parameters
+    ----------
+    n : int
+        The number of items
+    m : int
+        The number of couriers
+    s : list of ints
+        The items' sizes
+    l : list of ints
+        The couriers' capacities
+
+    Returns
+    -------
+    solv : z3.Solver()
+        The solver with all the constraints added
+    pred : list z3.Int
+        The variables assigning to each item its predecessor
+    cour : list of z3.Int
+        The variables assigning to each item the courier that is carrying it.
+    
+    """
 
     solv= Solver()
 
-    #Create a (n+m)-long array cour: cour[i] == j iff the i-th item (or starting/ending point) is taken by the j-th courier
+    # cour is (n+m)-long array: cour[i] == j iff the i-th item (or starting/ending point) is taken by the j-th courier
     cour = [Int(f"c{i}") for i in range(n+m)]
 
-    #Set cour range
+    # Set cour range
     for i in range(n):
         solv.add(cour[i] < m )
         solv.add(cour[i] >= 0 )
 
-    #The last m elements of cour are fixed: the courier cour starts and ends at the deposit n+cour
+    # # The courier c starts and ends at the deposit n+c <-> The last m elements of cour are setted to the corresponding courier.
     for i in range(m):
         solv.add(cour[n+i] == i)
-        #solv.add(cour[n+m+i] == i)
 
-    #Weight constraint
+    # Each courier can't carry more weight than its capacity <-> for every courier c, we add the upper bound to the sum of n Ifs: each If returns the weight of the
+    # item if the item is carried, 0 otherwise.
     for c in range(m):
         solv.add(Sum([If(cour[i] == c, s[i], 0) for i in range(n)]) <= l[c])
 
-    #Create a (n+m)-long array: pred[i] == j if the j-th item is the predecessor of the i-th item. 
-    #The n+c element in the matrix is the starting/ending point of the c-th courier.
+    # pred is an (n+m)-long array: pred[i] == j if the j-th item is the predecessor of the i-th item. 
+    # pred[i] = n+c if the item i is the first item taken by the c-th courier.
+    # pred[n+c] = i if the item i is the last item taken by the c-th courier.
     pred = [Int(f"pred({i})")for i in range(n+m)]
-
-    #Set pred range
+    # Set pred range
     for i in range(n+m):
         solv.add(pred[i] < n+m)
         solv.add(pred[i] >= 0)
 
-    #Each item/ending point has a different predecessor
+    # Each item/ending point has a different predecessor
     solv.add(Distinct([pred[i] for i in range(n+m)]))
 
-    #If the courier cour has the item i and the item j is the predecessor of the item i then cour has the item j
+    #In one route all the items have to be carried by the same courier <-> If the courier c carries the item i and the item j is the predecessor of the item i then 
+    # c carries the item j
     for c in range(m):
         solv.add(And(  [Implies(And([ cour[i] == c, pred[i] == j] ) , cour[j] == c) for i in range(n+m) for j in range(n+m)]  ))
 
-    #Create a list of length n no_loop: if the item j is predecessor of the item i then no_loop(i) as an integer is > than no_loop(j) as an integer 
-    no_loops = [BitVec(f'no_loop{i}', 16) for i in range(n)]
-    solv.add(And([Implies(pred[i] == j, no_loops[i]>no_loops[j]) for i in range(n) for j in range(n)]))
+    # Each courier should start and finish his route in the origin and can't take an item twice. In other words, no internal loops are admitted.
+    # avoid_loops is a n-long array: if the item j is predecessor of the item i then avoid_loop(i) is greater than > than avoid_loop(j) as an integer 
+    avoid_loops = [BitVec(f'avoid_loop{i}', 16) for i in range(n)]
+    solv.add(And([Implies(pred[i] == j, avoid_loops[i]>avoid_loops[j]) for i in range(n) for j in range(n)]))
 
     return solv, pred, cour
 
 
 def small_SMT_Solver(n):
+    """ This function creates and returns a SMT solver that can find a correct solution of a simplified MCP problem, with only one courier and no capacity bounds.
+
+    Parameters
+    ----------
+    n : int
+        The number of items
+
+    Returns
+    -------
+    solv : z3.Solver()
+        The solver with all the constraints added
+    pred : list of z3.Int
+        The variables assigning to each item its predecessor
+
+    """
     solv= Solver()
 
-    #Create a (n+1)-long array: pred[i] == j if the j-th item is the predecessor of the i-th item. 
-    #The n-th element in the matrix is the starting/ending point.
+    # pred is an (n+1)-long array: pred[i] == j if the j-th item is the predecessor of the i-th item. 
+    # pred[i] = n if the item i is the first item of the route.
+    # pred[n] = i if the item i is the last item of the route.
     pred = [Int(f"pred({i})")for i in range(n+1)]
 
-    #Set pred range
+    # Set pred range
     for i in range(n+1):
         solv.add(pred[i] < n+1)
         solv.add(pred[i] >= 0)
 
-    #Each item/ending point has a different predecessor
+    # Each item/ending point has a different predecessor
     solv.add(Distinct([pred[i] for i in range(n+1)]))
 
-    #Create a list of length n no_loop: if the item j is predecessor of the item i then no_loop(i) as an integer is > than no_loop(j) as an integer 
-    no_loops = [BitVec(f'no_loop{i}', 16) for i in range(n)]
-    solv.add(And([Implies(pred[i] == j, no_loops[i]>no_loops[j]) for i in range(n) for j in range(n)]))
+    # The avoid_loops array is equal to the avoid_loops array described in big_SAT_Solver
+    avoid_loops = [BitVec(f'avoid_loop{i}', 16) for i in range(n)]
+    solv.add(And([Implies(pred[i] == j, avoid_loops[i]>avoid_loops[j]) for i in range(n) for j in range(n)]))
     
     return solv, pred
 
 
 def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 300):
-    """
-    input
-    - n : int = number of items
-    - m : int = number of couriers
-    - s : list of ints = items' weight
-    - l : list of ints = couriers' capacity
-    - D : list of lists = distance matrix
-    - approaches : list of strings = approach to use ('default' or 'clustering')
-    - tot_time : int = time's upper bound
+    """ SMT_MCP function, given an istance and a list of approaches, perform a search and returns the solutions found
+    
+    Parameters
+    ----------
+    n : int 
+        The number of items
+    m : int
+        The number of couriers
+    s : list of ints
+        The items' sizes
+    l : list of ints
+        The couriers' capacities
+    D : list of lists of ints
+        The distance matrix
+    approaches : list of strings 
+        The approaches to use ('default' or 'clustering')
+    tot_time : int, optional
+        Time's upper bound (equal to 300 by default)
 
-    output
-    - solutions : dict = it has approaches as keys and dictionaries containing the solution as items
+    Returns
+    -------
+    solutions : dict 
+        The dictionary containing the solutions. It has the approaches as keys and dictionaries containing the solution as items
+
     """
 
     solutions = {}
 
+    #'default' approach searches the optimal solution using big_SMT_Solver
     if 'default' in approaches:
 
         solv, pred, cour = big_SMT_Solver(n, m, s, l)
 
-        # Time
+        # Time managing
         starting_time = time.time()
         timeout = starting_time + tot_time #Ending time
         check_timeout = timeout-time.time() #Time left
@@ -123,11 +186,10 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
 
         stop = False
         while time.time() < timeout and not stop:
-
             solv.set('timeout', int(check_timeout*1000)) #time left in millisec 
-
             solv.push()
-           
+            
+            #Add the upper bound to the objective function
             for c in range(m):
                 starting_point = [pred[item] == n+c for item in range(n)]
                 starting_point_distances = [D[n][item] for item in range(n)]
@@ -141,6 +203,7 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                 solv.add(PbLe([ (points[i], distances[i]) for i in range(len(points)) ], best_obj-1))
 
             if solv.check()==sat:
+                # the problem is Satisfiable -> A new solution has been found. Update the best objective function's value, the corresponding solution and the time left.
                 tmp_model = solv.model()
                 item_pred = [(i, tmp_model.evaluate(pred[i]).as_long())  for i in range(n+m)]
                 cour_item = [(tmp_model.evaluate(cour[i]).as_long(), i) for i in range(n)]
@@ -151,21 +214,25 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                 check_timeout = timeout-time.time() #Time left
                 solv.pop()
 
-            elif best_obj != sf.up_bound(n,D) and time.time() < timeout: #else (no new solutions are found), if it found at least one solution and there is still time then it has found the optimal solution!
+            elif best_obj != sf.up_bound(n,D) and time.time() < timeout:
+                # No new solutions are found, one solution stored and there is still time -> it has found the optimal solution. Save the optimal solution.                
                 solutions['default'] = {'time' : int(time.time() - starting_time) , 'optimal' : True , 'obj' : best_obj , 'sol' : sf.solution_maker(item_pred, cour_item, n, m)}
                 stop = True
 
-            elif best_obj != sf.up_bound(n,D): #else (no more solution and not optimal reached and no more time), if at least one solution was found:
+            elif best_obj != sf.up_bound(n,D): 
+                # No new solutions, one solution stored and no more time -> the time endend and we didn't reach the optimal solution. Save the best solution found.
                 solutions['default'] = {'time' : 300 , 'optimal' : False , 'obj' : best_obj, 'sol' : sf.solution_maker(item_pred, cour_item, n, m)}
             
-            else: #no more solution and not optimal reached and no solution found at all
+            else: 
+                # No new solutions, no solutions found at all and no more time -> it didn't find any solution in the given time. Save an empty solution
                 solutions['default'] = {'time' : 300 , 'optimal' : False , 'obj' : 'N/A' , 'sol' : []}
                 stop = True   
     
+    #'clustering' approach creates clusters, orders them using small_SMT_Solver, creates a new distance matrix and a new items' weights array and perform a 'default'
+    # search on the reduced problem. 
     if 'clustering' in approaches:
-
+        #Find some clusters
         clusters, s_clusters = cl.complete_clustering(D, s, n, m)
-
         real_clusters = [cluster for cluster in clusters if len(cluster)>1]
         clusters_paths=[]
 
@@ -180,6 +247,7 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
             timeout_for_clustering = starting_time + 60*1*((it+1)/len(real_clusters))
             check_timeout_for_clustering = timeout_for_clustering-time.time() #Time left for this cluster
 
+            #Create D_clus: the distance matrix with only the items in this cluster
             D_clus=[]
             for i in cluster:
                 D_clus.append([])
@@ -189,22 +257,19 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
             D_clus.append([0 for k in range(n_cluster+1)])
 
             solv, pred = small_SMT_Solver(n_cluster)
-
             best_obj = sf.up_bound(n_cluster, D_clus)
-
             stop = False
-
             while time.time() < timeout_for_clustering and not stop:
                 solv.set('timeout', int(check_timeout_for_clustering*1000)) #time left in millisec 
                 solv.push()
 
+                #Add the upper bound to the objective function
                 points = [pred[i] == j for i in range(n_cluster) for j in range(n_cluster)]
                 distances = [D_clus[j][i] for i in range(n_cluster) for j in range(n_cluster)]
-
                 solv.add(PbLe([ (points[i], distances[i]) for i in range(len(points)) ], best_obj-1))
                 
-                if solv.check()==sat: #If a new solution for this cluster is found:
-                    
+                if solv.check()==sat: 
+                    # the problem is Satisfiable -> A new solution has been found. Update the best objective function's value, the corresponding solution and the time left.
                     tmp_model = solv.model()
                     item_pred = [(i, tmp_model.evaluate(pred[i]).as_long())  for i in range(n_cluster+1)]
                     tmp_obj = sf.obj_fun_clus(item_pred, n_cluster, D_clus)
@@ -213,27 +278,26 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                         best_obj=tmp_obj
                     check_timeout_for_clustering = timeout_for_clustering-time.time() #Time left
                     solv.pop()
-                elif best_obj != sf.up_bound(n_cluster, D_clus): #else (no new sol for this cluster) if at least one solutios was found save it
+
+                elif best_obj != sf.up_bound(n_cluster, D_clus): 
+                    #No new solutions, one solution stored. Save the best solution found.
                     cluster_copy=copy.deepcopy(cluster)
                     cluster_copy.append(-1)
                     clusters_paths.append([(cluster_copy[i],cluster_copy[j]) for i in range(n_cluster+1) for j in range(n_cluster+1) if best_model.evaluate(pred[i]).as_long() == j])
                     stop = True
-                else: #else (no new solution and it didn't found any solution at all) save a standard solution
+                else: 
+                    # No new solutions and  no solutions found at all. save a standard solution.
                     cluster_copy=copy.deepcopy(cluster)
                     cluster_copy.append(-1)
                     cluster_copy[:0] = [-1]
                     clusters_paths.append([(cluster_copy[i],cluster_copy[i+1]) for i in range(n_cluster+1)])
                     stop = True
 
+        # Given all the single solutions for the clusters, save the first and last item of each cluster
         n_new = len(clusters)-1
-
         first_items_for_clusters=[]
-        last_item_for_clusters=[]
-
-        
+        last_item_for_clusters=[] 
         i=0
-
-
         for clus in clusters:
             if len(clus)>1:
                 path=clusters_paths[i]
@@ -247,6 +311,7 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                 last_item_for_clusters.append(clus[0])
                 first_items_for_clusters.append(clus[0])
 
+        # Build D_new: D[item][cluster] = D[item][x] where x is the first item of the cluster and D[cluster][item] = D[x][item] where x is the last item of the cluster.
         D_new=[]
         for i in range(n_new+1):
             D_new.append([])
@@ -256,8 +321,10 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                 else:
                     D_new[-1].append( D[first_items_for_clusters[i]][last_item_for_clusters[j]] )
 
-        big_sol = SMT_MCP(n_new, m, s_clusters, l, D_new, 'default', timeout)
+        # Recursively call SMT_MCP with default approach to solve the simplified istance
+        big_sol = SMT_MCP(n_new, m, s_clusters, l, D_new, ['default'], timeout)
 
+        # Save the complete solution
         if big_sol['default']['sol'] != []:
             sol = sf.solution_maker_cluster(clusters, clusters_paths, first_items_for_clusters, big_sol['default']['sol'], m)
             solutions['clustering'] = {'time' : int(time.time() - starting_time) , 'optimal' : False , 'obj' : sf.obj_fun_from_solution(sol, n, D) , 'sol' : sol} 
