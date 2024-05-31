@@ -48,14 +48,14 @@ def obj_fun_clus(item_pred, n, D):
 def obj_fun_from_solution(sol, n, D):
     distances = []
     for path in sol:
-        dis = D[n][path[0]] + sum([D[path[i]][path[i+1]] for i in range(len(path)-1)]) + D[path[-1]][n]
-        distances.append(dis)
+        if len(path)!=0:
+            dis = D[n][path[0]] + sum([D[path[i]][path[i+1]] for i in range(len(path)-1)]) + D[path[-1]][n]
+            distances.append(dis)
     return max(distances)
 
 def solution_maker(item_pred, cour_item, n, m):
     cour_item_pred = [[i_p for i_p in item_pred if (cour, i_p[0]) in cour_item] for cour in range(m)]
     solution = [[] for _  in range(m)]
-    #print(cour_item_pred)
     for cour in range(m):
         current_item = n+cour
         while len(solution[cour])!=len(cour_item_pred[cour]):
@@ -72,27 +72,36 @@ def solution_maker(item_pred, cour_item, n, m):
 
 def solution_maker_cluster(clusters, clusters_paths, first_items_for_clusters, solution_big, m):
     solution = [[] for _  in range(m)]
-    current_cluster_number = 0
-    for cour in range(m):
-        for clus in solution_big[cour]:
+
+    cluster_path_semplified = []
+    for i in clusters_paths:
+        cluster_path_semplified += i
+
+    for c in range(m):
+
+        for clus in solution_big[c]:
+
             if len(clusters[clus]) == 1:
-                 solution[cour].append(clusters[clus][0])
-            else:
+                 solution[c].append(clusters[clus][0])
+                 
+            elif len(clusters[clus]) > 1 :
                 ordered_cluster = []
                 current_item = first_items_for_clusters[clus]
+
                 while current_item!=-1:
                     ordered_cluster.append(current_item)
                     found = False
                     i=-1
                     while not found:
-                        if (i, current_item) in clusters_paths[current_cluster_number]:
+                        if (i, current_item) in cluster_path_semplified:
                             current_item = i
                             found = True
+
                         else:
                             i+=1
 
-                solution[cour] = solution[cour] + ordered_cluster
-                current_cluster_number += 1
+                solution[c] = solution[c] + ordered_cluster
+
     return solution
 
 

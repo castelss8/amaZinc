@@ -8,7 +8,7 @@ import time
 import sys
 from importlib import reload
 
-sys.path.append('/Users/mange/Documents/GitHub/Uni/amaZinc')
+#sys.path.append('/Users/mange/Documents/GitHub/Uni/amaZinc')
 from functions import sol_functions as sf
 from functions import clustering as cl 
 
@@ -142,7 +142,9 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
 
             if solv.check()==sat:
                 tmp_model = solv.model()
-                item_pred, cour_item = [(i,j) for j in range(n+m) for i in range(n+m) if tmp_model.evaluate(pred[i]).as_long() == j], [(c, i) for i in range(n) for c in range(m) if tmp_model.evaluate(cour[i]).as_long() == c]
+                item_pred = [(i, tmp_model.evaluate(pred[i]).as_long())  for i in range(n+m)]
+                cour_item = [(tmp_model.evaluate(cour[i]).as_long(), i) for i in range(n)]
+                
                 tmp_obj = sf.obj_fun(item_pred, cour_item, n, m, D)
                 if tmp_obj<best_obj:
                     best_obj=tmp_obj
@@ -196,16 +198,15 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                 solv.set('timeout', int(check_timeout_for_clustering*1000)) #time left in millisec 
                 solv.push()
 
-                points = [pred[i] == j for i in range(n) for j in range(n)]
-                distances = [D[j][i] for i in range(n) for j in range(n)]
+                points = [pred[i] == j for i in range(n_cluster) for j in range(n_cluster)]
+                distances = [D_clus[j][i] for i in range(n_cluster) for j in range(n_cluster)]
 
-                points  = starting_point + ending_point + mid_points
-                distances = starting_point_distances + ending_point_distances + mid_points_distances
                 solv.add(PbLe([ (points[i], distances[i]) for i in range(len(points)) ], best_obj-1))
                 
                 if solv.check()==sat: #If a new solution for this cluster is found:
+                    
                     tmp_model = solv.model()
-                    item_pred = [(i,j) for j in range(n_cluster+1) for i in range(n_cluster+1) if tmp_model.evaluate(pred[i][j])]
+                    item_pred = [(i, tmp_model.evaluate(pred[i]).as_long())  for i in range(n_cluster+1)]
                     tmp_obj = sf.obj_fun_clus(item_pred, n_cluster, D_clus)
                     if tmp_obj<best_obj:
                         best_model=tmp_model
@@ -215,7 +216,7 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                 elif best_obj != sf.up_bound(n_cluster, D_clus): #else (no new sol for this cluster) if at least one solutios was found save it
                     cluster_copy=copy.deepcopy(cluster)
                     cluster_copy.append(-1)
-                    clusters_paths.append([(cluster_copy[i],cluster_copy[j]) for i in range(n_cluster+1) for j in range(n_cluster+1) if best_model.evaluate(pred[i][j])])
+                    clusters_paths.append([(cluster_copy[i],cluster_copy[j]) for i in range(n_cluster+1) for j in range(n_cluster+1) if best_model.evaluate(pred[i]).as_long() == j])
                     stop = True
                 else: #else (no new solution and it didn't found any solution at all) save a standard solution
                     cluster_copy=copy.deepcopy(cluster)
@@ -224,35 +225,15 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                     clusters_paths.append([(cluster_copy[i],cluster_copy[i+1]) for i in range(n_cluster+1)])
                     stop = True
 
-
-                
-                if solv.check()==sat:
-                    tmp_model = solv.model()
-                    item_pred = [(i,j) for j in range(n_cluster+1) for i in range(n_cluster+1) if tmp_model.evaluate(pred[i][j])]
-                    tmp_obj = sf.obj_fun_clus(item_pred, n_cluster, D_clus)
-                    if tmp_obj<best_obj:
-                        best_model=tmp_model
-                        best_obj=tmp_obj
-                    check_timeout_for_clustering = timeout_for_clustering-time.time() #Time left
-                    solv.pop()
-                else:
-                    cluster_copy=copy.deepcopy(cluster)
-                    cluster_copy.append(-1)
-                    clusters_paths.append([(cluster_copy[i],cluster_copy[j]) for i in range(n_cluster+1) for j in range(n_cluster+1) if best_model.evaluate(pred[i][j])])
-                    opt = True
-            if not opt:
-                cluster_copy=copy.deepcopy(cluster)
-                cluster_copy.append(-1)
-                clusters_paths.append([(cluster_copy[i],cluster_copy[j]) for i in range(n_cluster+1) for j in range(n_cluster+1) if best_model.evaluate(pred[i][j])])
-        
         n_new = len(clusters)-1
 
         first_items_for_clusters=[]
         last_item_for_clusters=[]
 
         
-
         i=0
+
+
         for clus in clusters:
             if len(clus)>1:
                 path=clusters_paths[i]
@@ -275,11 +256,11 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                 else:
                     D_new[-1].append( D[first_items_for_clusters[i]][last_item_for_clusters[j]] )
 
-        big_sol = SAT_MCP(n_new, m, s_clusters, l, D_new, 'default', timeout)
+        big_sol = SMT_MCP(n_new, m, s_clusters, l, D_new, 'default', timeout)
 
-        if big_sol['default']['optimal'] == True:
+        if big_sol['default']['sol'] != []:
             sol = sf.solution_maker_cluster(clusters, clusters_paths, first_items_for_clusters, big_sol['default']['sol'], m)
-            solutions['clustering'] = {'time' : int(time.time() - starting_time) , 'optimal' : False , 'obj' : sf.obj_fun_from_solution(sol, n, D) , 'sol' : sol} #Da cambiare!!!
+            solutions['clustering'] = {'time' : int(time.time() - starting_time) , 'optimal' : False , 'obj' : sf.obj_fun_from_solution(sol, n, D) , 'sol' : sol} 
         
         else:
             solutions['clustering'] = {'time' : 300 , 'optimal' : False , 'obj' : 'N/A' , 'sol' : []}
@@ -289,7 +270,7 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
 
         
 
-
+'''
 instance_n=5 #from 1 to 21
 
 if instance_n<10:
@@ -297,7 +278,7 @@ if instance_n<10:
 else:
     file_name='inst'+str(instance_n)+'.dat'
 
-file = open('Documents/GitHub/Uni/amaZinc/SAT/Instances/inst21.dat')
+file = open('Documents/GitHub/Uni/amaZinc/SAT/Instances/inst04.dat')
 
 splitted_file = file.read().split('\n')
 
@@ -313,4 +294,5 @@ D = [list(map(int, line.strip().split(' '))) for line in splitted_file[4:(n+5)]]
 
 print('Instance number '+str(instance_n)+': '+str(n)+' items and '+str(m)+' couriers.')
 
-print(SMT_MCP(n, m, s, l, D, ['default']))
+print(SMT_MCP(n, m, s, l, D, ['default', 'clustering']))
+'''

@@ -2,7 +2,7 @@ import os
 import json
 import math
 import re
-import pathlib
+from pathlib import Path
 
 # util function for manipulating strings 
 
@@ -36,27 +36,30 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
 
     # instance path
     if instance <=9:
-        instance_path = pathlib.Path = pathlib.Path("CP/instances/inst0"+str(instance)+".dzn")
+        instance_path = Path("./CP/Preprocessed_Instances/inst0"+str(instance)+".dzn")
     else:
-        instance_path = pathlib.Path = pathlib.Path("CP/instances/inst"+str(instance)+".dzn")
+        instance_path = Path("./CP/Preprocessed_Instances/inst"+str(instance)+".dzn")
     
 
     # model path
 
     if solver == "Gecode" and search == "IndomainRandom":
-        model_path = pathlib.Path = pathlib.Path("CP/CP_model_1.mzn")
+        model_path = Path("./CP/CP_model_1.mzn")
     elif solver == "Gecode" and search == "IndomainRandom_RelAndRec":
-        model_path = pathlib.Path = pathlib.Path("CP/CP_model_2.mzn")
+        model_path = Path("./CP/CP_model_2.mzn")
     elif solver == "Gecode" and search == "IndomainMin_RelAndRec":
-        model_path = pathlib.Path = pathlib.Path("CP/CP_model_3.mzn")
+        model_path =  Path("./CP/CP_model_3.mzn")
     elif solver == "Chuffed" and search == "Smallest":
-        model_path = pathlib.Path = pathlib.Path("CP/CP_model_4.mzn")
+        model_path = Path("./CP/CP_model_4.mzn")
     elif solver == "Chuffed" and search == "InputOrder":
-        model_path = pathlib.Path = pathlib.Path("CP/CP_model_5.mzn")
+        model_path =Path("./CP/CP_model_5.mzn")
 
     # run of the model
+    with open(model_path, 'r') as f:
+        pass
 
-    args = "minizinc  --solver "+solver+" "+model_path+" "+instance_path+" --solver-time-limit 300000 --json-stream --output-time --intermediate"
+    args = "minizinc --solver "+solver+" "+str(model_path)+" "+str(instance_path)+" --solver-time-limit 300000 --json-stream --output-time --intermediate"
+    print(args)
 
 
     # read of json-stream
@@ -64,6 +67,7 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
     results = []
 
     minizinc_output = os.popen(args).readlines()
+    print('popen')
 
     for i in minizinc_output:
         try:
@@ -110,6 +114,10 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
         else:
             time = math.floor(int(optimal_solution[-1]["time"])/1000)
             optimal = True
+
+    # print of the dictionary
+    print({solver+"_"+search: {"time": time, "optimal": optimal, "obj": obj, "sol": sol}})
+
 
 
     return {solver+"_"+search: {"time": time, "optimal": optimal, "obj": obj, "sol": sol}}

@@ -15,7 +15,6 @@ def inst_read(instance_n):
             l (list) - list of couriers' capacities
             D (list of lists) - Distance matrix
     '''
-    instance_n+=1
 
     if instance_n<10:
         file_name='inst0'+str(instance_n)+'.dat'
@@ -29,10 +28,13 @@ def inst_read(instance_n):
     n = int(splitted_file[1])
     l = list(map(int, splitted_file[2].split(' ')))
     tmp_s = splitted_file[3].split(' ')
+
     if '' in tmp_s:
         s = list(map(int, [tmp_s[i] for i in range(len(tmp_s)) if tmp_s[i]!='']))
     else:
         s = list(map(int, splitted_file[3].split(' ')))
+
     D = [list(map(int, line.strip().split(' '))) for line in splitted_file[4:(n+5)]]
 
-    return n, m, s, l, D
+    #return dictionary with the instance information
+    return {'inst':instance_n, 'n':n,'m': m, 's': s, 'l': l,'D': D}
