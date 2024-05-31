@@ -1,0 +1,6 @@
+matplotlib
+numpy
+mip
+z3-solver
+gurobipy
+utils

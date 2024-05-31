@@ -6,7 +6,7 @@ It will run the model on the instance and save the output in the output file, in
 
 from CP.CP_runner import run_CP_model as CP_runner
 from SAT.SAT_Model import SAT_MCP as SAT_runner
-#from MIP.MIP_runner import MIP_MCP as MIP_runner
+from MIP.MIP_runner import MIP_MCP as MIP_runner
 from SMT.SMT_Model_Int import SMT_MCP as SMT_runner
 from functions.Instances_Reader import inst_read as IR
 from functions.create_json import create_json as CJ
@@ -68,12 +68,14 @@ def run(
             CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "MIP_Normal":
             # Uncomment the following line when MIP_runner is available
-            # sol.append(MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'default'))
-            pass
+            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'default')
+            sol.append()
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "MIP_Cluster":
             # Uncomment the following line when MIP_runner is available
-            # sol.append(MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'cluster'))
-            pass
+            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'clustering')
+            sol.append()
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "SMT_Normal":
             sol_tmp = SMT_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'default')
             sol.append(sol_tmp)

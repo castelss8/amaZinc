@@ -2,10 +2,7 @@ from z3 import *
 
 import numpy as np
 from itertools import combinations
-from utils import *
-import math
 import time
-import sys
 from importlib import reload
 
 #sys.path.append('/Users/mange/Documents/GitHub/Uni/amaZinc')

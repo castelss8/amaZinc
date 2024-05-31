@@ -13,10 +13,7 @@ def find_between(s: str, first: str, last: str):
 
 
 # function running the CP model on a specific instance, whith a specific solver and a specific search strategy
-
-def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
-    
-    '''
+'''
         input:
             instance: int = number of the instance
             n: int = number of items as defined in instance
@@ -32,8 +29,9 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
                                 - "InputOrder"
 
         output: dictionary to be used in "res\CP\inst.json" for solution for the model, as described in the project description
-    '''
-
+'''
+def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
+    
     # instance path
     if instance <=9:
         instance_path = Path("./CP/Preprocessed_Instances/inst0"+str(instance)+".dzn")

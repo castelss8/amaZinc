@@ -7,109 +7,104 @@ import copy
 
 import numpy as np
 
-#Read instance from file 
-f_name = "Instances/inst02"
-with open(f_name + ".dat", "r") as f:
-    lines = f.readlines()
-
-#variables
-m = int(lines[0]) #number of couriers
-n = int(lines[1]) #number of items
-l = [int(x) for x in lines[2].split()] #%array of couriers' capacities
-s = [int(x) for x in lines[3].split()] #%array of items' sizes
-D = [[int(x) for x in line.split()] for line in lines[4:]] #%matrix of distances
-#lower_bound = prim(D) #lower bound
+options = {
+    "WLSACCESSID": "4a8c30c7-fb19-4f0c-86f8-1fe42786ea83",
+    "WLSSECRET": "1be3548e-fd68-4be8-a22f-1b26e9392310", 
+    "LICENSEID": 2513665,
+}
 
 
 
 
 def MIP_Model(n, m, s, l, D, focus):
     
-    #Model Initialization
-    model = gp.Model("MIP_Model_Gurobi")
-
-    #Decision variables
-    '''
-      vehicle matrix 
-      col = packs
-      rows = courriers 
-      each rows represent the list of packs foreach courrier
-      #create a [m x (n+m)] matrix v. v[i][j]==True if the i-th courier takes the j-th item (or starting/ending point)
-    ''' 
-    cour = model.addMVar(shape=(m, n+m), vtype=GRB.BINARY, name="cour")
-    model.update()
-
-    #constraints for cour
-    # each pack have to be carried by exactly one courrier
-    for j in range(n):
-        model.addConstr(quicksum(cour[i][j] for i in range(m)) == 1, f"cour_{j}")
+    with gp.Env(params=options) as env, gp.Model(env=env) as model:
     
-    #the last m-columns of cour are fixed: the courier c starts and ends at the deposit n+c
-    for j in range(m):
-        for i in range(m):
-            if j == i:
-                model.addConstr(cour[i][n+j] == 1, f"cour_{n+j}")
-            else:
-                model.addConstr(cour[i][n+j] == 0, f"cour_{n+j}")
-    
-    #Constraint fot the capacity of each courrier
-    for c in range(m):
-        model.addConstr(quicksum(cour[c][i]*s[i] for i in range(n)) <= l[c], f"peso_{c}")
+        model = gp.Model("MIP_Model_Gurobi")
+        
 
-    '''
-      pred matrix
-      pred[i][j] = true if the j-th item is the predecessor of the i-th item  
-   '''
-    pred = model.addMVar(shape=(n+m, n+m), vtype=GRB.BINARY, name="pred")
-    model.update()
+        #Decision variables
+        '''
+        vehicle matrix 
+        col = packs
+        rows = courriers 
+        each rows represent the list of packs foreach courrier
+        #create a [m x (n+m)] matrix v. v[i][j]==True if the i-th courier takes the j-th item (or starting/ending point)
+        ''' 
+        cour = model.addMVar(shape=(m, n+m), vtype=GRB.BINARY, name="cour")
+        model.update()
 
-    #Each item/ending point has exactly one predecessor and each item/starting point is predecessor of exactly one other item. 
-    for i in range(n+m):
-        col_i = [pred[j][i] for j in range(n+m)]
-        model.addConstr(quicksum(col_i) == 1, f"PC_{i}")
-        model.addConstr(quicksum(pred[i]) == 1, f"PR_{i}")
-
-    #Constraint coerenza courier - predecessore/successore
-    #if the courier c has the item i and item j is the predecessor of item i then c has also item j
-    for c in range(m):
-        for i in range(n+m):
-            for j in range(n+m):
-                model.addConstr(cour[c][j] >= cour[c][i] + pred[i][j] - 1, f"coerenza_{c}_{i}_{j}")
-                #if cour[c][i] v pred[i][j] => cour[c][j]
-                #if cour[c][i] e pred[i][j] sono entrambi 1, allora cour[c][j] deve essere almeno 2, ma poiché è una variabile binaria, deve essere 1. 
-                #if uno o entrambi sono 0, allora cour[c][j] può essere 0 o 1.
-    
-    #vector to avoid loops, lenght n
-    avoid_loops = [model.addVar(lb=1, ub=n, vtype=GRB.INTEGER, name=f"avoid_loops") for _ in range(n)]
-    model.update()
-    for i in range(n):
+        #constraints for cour
+        # each pack have to be carried by exactly one courrier
         for j in range(n):
-            #if pred[i][j] == 1 then avoid_loops[i] - avoid_loops[j] >= 1
-            #if pred[i][j] == 0 then 0 - 0 - 0 >= 0
-            model.addConstr(avoid_loops[i]*pred[i][j] - avoid_loops[j]*pred[i][j] - pred[i][j] >= 0, f"avoid_loops_{i}_{j}")
-    
-    #Vector of distances for each courier
-    dist_vector = []
-    for courier in range(m):
-        dist_vector.append(model.addVar(vtype=GRB.INTEGER, name="dist_vector"))
-    model.update()
+            model.addConstr(quicksum(cour[i][j] for i in range(m)) == 1, f"cour_{j}")
+        
+        #the last m-columns of cour are fixed: the courier c starts and ends at the deposit n+c
+        for j in range(m):
+            for i in range(m):
+                if j == i:
+                    model.addConstr(cour[i][n+j] == 1, f"cour_{n+j}")
+                else:
+                    model.addConstr(cour[i][n+j] == 0, f"cour_{n+j}")
+        
+        #Constraint fot the capacity of each courrier
+        for c in range(m):
+            model.addConstr(quicksum(cour[c][i]*s[i] for i in range(n)) <= l[c], f"peso_{c}")
 
-    #Constraint for the distance of each courier
-    for courier in range(m):
-        model.addConstr(dist_vector[courier] - (quicksum((pred[item][n+courier]) * D[n][item] for item in range(n))+
-                                                quicksum((pred[n+courier][item]) * D[item][n] for item in range(n))+
-                                                quicksum((cour[courier][i] * pred[i][j]) * D[j][i] for i in range(n) for j in range(n))) == 0, 
-                                                f"dist_vector_{courier}")
+        '''
+        pred matrix
+        pred[i][j] = true if the j-th item is the predecessor of the i-th item  
+    '''
+        pred = model.addMVar(shape=(n+m, n+m), vtype=GRB.BINARY, name="pred")
+        model.update()
 
-    # Creare la variabile max_dist e impostarla come massimo di dist_vector
-    max_dist = model.addVar(vtype=GRB.INTEGER, name="max_dist")
-    model.update()
-    
-    # Constraint for the max distance: takes the maximum value of dist_vector
-    model.addGenConstrMax(max_dist, dist_vector, name="max_dist_constraint")
+        #Each item/ending point has exactly one predecessor and each item/starting point is predecessor of exactly one other item. 
+        for i in range(n+m):
+            col_i = [pred[j][i] for j in range(n+m)]
+            model.addConstr(quicksum(col_i) == 1, f"PC_{i}")
+            model.addConstr(quicksum(pred[i]) == 1, f"PR_{i}")
 
-    # Objective function: minimize the maximum distance
-    model.setObjective(max_dist, GRB.MINIMIZE)
+        #Constraint coerenza courier - predecessore/successore
+        #if the courier c has the item i and item j is the predecessor of item i then c has also item j
+        for c in range(m):
+            for i in range(n+m):
+                for j in range(n+m):
+                    model.addConstr(cour[c][j] >= cour[c][i] + pred[i][j] - 1, f"coerenza_{c}_{i}_{j}")
+                    #if cour[c][i] v pred[i][j] => cour[c][j]
+                    #if cour[c][i] e pred[i][j] sono entrambi 1, allora cour[c][j] deve essere almeno 2, ma poiché è una variabile binaria, deve essere 1. 
+                    #if uno o entrambi sono 0, allora cour[c][j] può essere 0 o 1.
+        
+        #vector to avoid loops, lenght n
+        avoid_loops = [model.addVar(lb=1, ub=n, vtype=GRB.INTEGER, name=f"avoid_loops") for _ in range(n)]
+        model.update()
+        for i in range(n):
+            for j in range(n):
+                #if pred[i][j] == 1 then avoid_loops[i] - avoid_loops[j] >= 1
+                #if pred[i][j] == 0 then 0 - 0 - 0 >= 0
+                model.addConstr(avoid_loops[i]*pred[i][j] - avoid_loops[j]*pred[i][j] - pred[i][j] >= 0, f"avoid_loops_{i}_{j}")
+        
+        #Vector of distances for each courier
+        dist_vector = []
+        for courier in range(m):
+            dist_vector.append(model.addVar(vtype=GRB.INTEGER, name="dist_vector"))
+        model.update()
+
+        #Constraint for the distance of each courier
+        for courier in range(m):
+            model.addConstr(dist_vector[courier] - (quicksum((pred[item][n+courier]) * D[n][item] for item in range(n))+
+                                                    quicksum((pred[n+courier][item]) * D[item][n] for item in range(n))+
+                                                    quicksum((cour[courier][i] * pred[i][j]) * D[j][i] for i in range(n) for j in range(n))) == 0, 
+                                                    f"dist_vector_{courier}")
+
+        # Creare la variabile max_dist e impostarla come massimo di dist_vector
+        max_dist = model.addVar(vtype=GRB.INTEGER, name="max_dist")
+        model.update()
+        
+        # Constraint for the max distance: takes the maximum value of dist_vector
+        model.addGenConstrMax(max_dist, dist_vector, name="max_dist_constraint")
+
+        # Objective function: minimize the maximum distance
+        model.setObjective(max_dist, GRB.MINIMIZE)
     
     return model, pred, cour
 
@@ -161,7 +156,7 @@ def MIP_MCP(n, m, s, l, D, approaches: list, focus=0, total_time=300):
     if 'default' in approaches:
         # Time Limit of 5 minutes
         gp.setParam("TimeLimit", total_time) # Time Limit of 5 minutes
-
+        #gp.Env(params=options)
         model, pred, cour = MIP_Model(n,m,s,l,D, focus)
     
         #MIPFocus parameter
@@ -190,6 +185,7 @@ def MIP_MCP(n, m, s, l, D, approaches: list, focus=0, total_time=300):
             cluster = real_clusters[it]
             print('working on' , cluster)
             n_cluster = len(cluster)
+            gp.Env(params=options)
 
             gp.setParam("TimeLimit", 60*1*((it+1)/len(real_clusters))) #1 minute for all clusters
             
@@ -253,5 +249,3 @@ def MIP_MCP(n, m, s, l, D, approaches: list, focus=0, total_time=300):
             solutions['clustering'] = {'time' : 300 , 'optimal' : False , 'obj' : 'N/A' , 'sol' : []}
 
     return solutions
-
-print(MIP_MCP(n,m,s,l,D, ['default'], focus=1, total_time=300))
