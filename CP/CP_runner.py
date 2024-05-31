@@ -44,21 +44,21 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
     # model path
 
     if solver == "Gecode" and search == "IndomainRandom":
-        model_path = Path("./CP_model_1.mzn")
+        model_path = Path("./CP/CP_model_1.mzn")
     elif solver == "Gecode" and search == "IndomainRandom_RelAndRec":
         model_path = Path("./CP/CP_model_2.mzn")
     elif solver == "Gecode" and search == "IndomainMin_RelAndRec":
-        model_path =  "./CP_model_3.mzn"
+        model_path =  Path("./CP/CP_model_3.mzn")
     elif solver == "Chuffed" and search == "Smallest":
-        model_path = "./CP_model_4.mzn"
+        model_path = Path("./CP/CP_model_4.mzn")
     elif solver == "Chuffed" and search == "InputOrder":
-        model_path ="./CP_model_5.mzn"
+        model_path =Path("./CP/CP_model_5.mzn")
 
     # run of the model
     with open(model_path, 'r') as f:
         pass
 
-    args = "minizinc  --solver "+solver+" "+str(model_path)+" "+str(instance_path)+" --solver-time-limit 300000 --json-stream --output-time --intermediate"
+    args = "minizinc --solver "+solver+" "+str(model_path)+" "+str(instance_path)+" --solver-time-limit 300000 --json-stream --output-time --intermediate"
     print(args)
 
 

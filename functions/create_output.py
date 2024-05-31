@@ -9,6 +9,7 @@ from SAT.SAT_Model import SAT_MCP as SAT_runner
 #from MIP.MIP_runner import MIP_MCP as MIP_runner
 from SMT.SMT_Model_Int import SMT_MCP as SMT_runner
 from functions.Instances_Reader import inst_read as IR
+from functions.create_json import create_json as CJ
 
 import pathlib as path
 
@@ -38,19 +39,33 @@ def run(
     for inst in inst_list:
         print(type(inst))
         if model_name == "CP_Gecode_1":
-            sol.append(CP_runner(inst['inst'], inst['n'], inst['m'], "Gecode", "IndomainRandom"))
+            sol_tmp = CP_runner(inst['inst'], inst['n'], inst['m'], "Gecode", "IndomainRandom")
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "CP_Gecode_2":
-            sol.append(CP_runner(inst['inst'], inst['n'], inst['m'], "Gecode", "IndomainRandom_RelAndRec"))
+            sol_tmp = CP_runner(inst['inst'], inst['n'], inst['m'], "Gecode", "IndomainRandom_RelAndRec")
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "CP_Gecode_3":
-            sol.append(CP_runner(inst['inst'], inst['n'], inst['m'], "Gecode", "IndomainMin_RelAndRec"))
+            sol_tmp = CP_runner(inst['inst'], inst['n'], inst['m'], "Gecode", "IndomainMin_RelAndRec")
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "CP_Chuffed_1":
-            sol.append(CP_runner(inst['inst'], inst['n'], inst['m'], "Chuffed", "Smallest"))
+            sol_tmp = CP_runner(inst['inst'], inst['n'], inst['m'], "Chuffed", "Smallest")
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "CP_Chuffed_2":
-            sol.append(CP_runner(inst['inst'], inst['n'], inst['m'], "Chuffed", "IndomainMin_RelAndRec"))
+            sol_tmp = CP_runner(inst['inst'], inst['n'], inst['m'], "Chuffed", "InputOrder")
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "SAT_Normal":
-            sol.append(SAT_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'default'))
+            sol_tmp = SAT_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'default')
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "SAT_Cluster":
-            sol.append(SAT_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'clustering'))
+            sol_tmp = SAT_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'clustering')
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "MIP_Normal":
             # Uncomment the following line when MIP_runner is available
             # sol.append(MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'default'))
@@ -60,9 +75,13 @@ def run(
             # sol.append(MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'cluster'))
             pass
         elif model_name == "SMT_Normal":
-            sol.append(SMT_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'default'))
+            sol_tmp = SMT_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'default')
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "SMT_Cluster":
-            sol.append(SMT_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'clustering'))
+            sol_tmp = SMT_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'clustering')
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
         else:
             print(f"Model {model_name} not recognized.")
                 # Check model_name

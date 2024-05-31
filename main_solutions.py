@@ -2,9 +2,6 @@ from z3 import *
 
 import numpy as np
 from itertools import combinations
-from utils import *
-import math
-import time
 from importlib import reload
 from functions.create_output import MODELS
 from functions.create_output import run as run
@@ -30,8 +27,7 @@ def run_project():
 
     instances = input()
 
-    print(f"\n--- Choose 1 if need output graph or 0 if not ---")
-    output_graph = int(input()) == 1
+    output_graph = False
 
     res_folder = path.Path("res")
     graph_folder = path.Path("graph")

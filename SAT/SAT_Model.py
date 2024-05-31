@@ -8,7 +8,7 @@ import time
 import sys
 from importlib import reload
 
-sys.path.append('/Users/mange/Documents/GitHub/Uni/amaZinc')
+#sys.path.append('/Users/mange/Documents/GitHub/Uni/amaZinc')
 from functions import sol_functions as sf
 from functions import clustering as cl 
 
