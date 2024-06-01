@@ -88,5 +88,16 @@ def run(
             print(f"Model {model_name} not recognized.")
                 # Check model_name
         
+        if 'Normal' in model_name:
+            d_key = 'default'
+        else:
+            d_key = 'clustering'
+
+        if model_name in ["SAT_Normal","SAT_Cluster", "MIP_Normal", "MIP_Cluster", "SMT_Normal", "SMT_Cluster"] and len(sol[-1][d_key]["sol"])>0: 
+            for i in range(len(sol[-1][d_key]["sol"])):
+                for j in range(len(sol[-1][d_key]["sol"][i])):
+                    sol[-1][d_key]["sol"][i][j] += 1
+
+
     print(sol)
     return

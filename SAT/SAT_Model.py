@@ -206,8 +206,8 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
             #Add the upper bound to the objective function
             for courier in range(m):
                 tmp_dist = [And(cour[courier][item], pred[item][item_2]) for item in range(n) for item_2 in range(n) for _ in range(D[item_2][item])]
-                tmp_dist += [And(cour[courier][item], pred[item][n+courier]) for item in range(n) for _ in range(D[n][item])]
-                tmp_dist += [And(cour[courier][item], pred[n+courier][item]) for item in range(n) for _ in range(D[item][n])]
+                tmp_dist += [pred[item][n+courier] for item in range(n) for _ in range(D[n][item])]
+                tmp_dist += [pred[n+courier][item] for item in range(n) for _ in range(D[item][n])]
                 solv.add(at_most_k(tmp_dist, best_obj-1))
            
             if solv.check()==sat:
