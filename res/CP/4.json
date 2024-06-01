@@ -1,0 +1,68 @@
+{
+    "Gecode_IndomainRandom": {
+        "time": 300,
+        "optimal": false,
+        "obj": 220,
+        "sol": [
+            [
+                9,
+                2
+            ],
+            [
+                8
+            ],
+            [
+                3
+            ],
+            [
+                6
+            ],
+            [
+                10
+            ],
+            [
+                1,
+                4
+            ],
+            [
+                5
+            ],
+            [
+                7
+            ]
+        ]
+    },
+    "Gecode_IndomainRandom_RelAndRec": {
+        "time": 300,
+        "optimal": false,
+        "obj": 220,
+        "sol": [
+            [
+                9,
+                2
+            ],
+            [
+                8
+            ],
+            [
+                3
+            ],
+            [
+                6
+            ],
+            [
+                10
+            ],
+            [
+                1,
+                4
+            ],
+            [
+                5
+            ],
+            [
+                7
+            ]
+        ]
+    }
+}
