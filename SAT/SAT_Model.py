@@ -72,12 +72,16 @@ def big_SAT_Solver(n, m, s, l):
             else:
                 solv.add(Not(cour[c][n+i]))
 
+        print('75')
+
     # Each courier can't carry more weight than its capacity <-> for every courier c we build an array (cour_weight) that, for every item, contains copies of 
     # cour[c][item] in number equal to the weight of item. Therefore if cour[c][item] is True, in cour_weight there are s[item] True (among the others). Then
     # we impose that the number of True in cour_weight for a coruier c is at most the equal to the capacity of c.
     for c in range(m):
         cour_weight = [cour[c][item] for item in range(n) for _ in range(s[item])]
         solv.add(at_most_k(cour_weight, l[c]))
+
+    print('84')
 
     # pred is an (n+m)x(n+m) matrix: pred[i][j] = true if the j-th item is the predecessor of the i-th item. 
     # pred[i][n+c] = True if the item i is the first item taken by the c-th courier. 
@@ -93,10 +97,14 @@ def big_SAT_Solver(n, m, s, l):
         solv.add(exactly_one(col_i))
         solv.add(exactly_one(pred[i]))
 
+    print(100)
+
     #In one route all the items have to be carried by the same courier <-> If the courier c carries the item i and the item j is the predecessor of the item i then 
     # c carries the item j
     for courier in range(m):
         solv.add(And(  [Implies(And([ cour[courier][i], pred[i][j]] ) , cour[courier][j]) for i in range(n+m) for j in range(n+m)]  ))
+
+    print(107)
 
     # Each courier should start and finish his route in the origin and can't take an item twice. In other words, no internal loops are admitted.
     # avoid_loops is a n x al_max matrix: for every item, avoi_loops[item][:] is an array such that if one index is False then also all the previous indexes are False
@@ -106,12 +114,13 @@ def big_SAT_Solver(n, m, s, l):
     for item in range(n):
         for k in range(al_max):
             solv.add(Implies(Not(avoid_loops[item][k]), Not(Or(avoid_loops[item][:k])))) #k=False then all the previous ones are False (-> if j>k is True then all the following ones are True)
+    print(117)
     # If item_j is predecessor of item_i (pred[item_i][item_j] = True) then avoid_loops[item_i][:] has more True than avoid_loops[item_j][:]. Since avoid loops has
     # the Falses before the Trues, this is equivalent to say that for at least one k avoid_loops[item_i][k] = True and avoid_loops[item_j][k] = False
     for item_i in range(n):
         for item_j in range(n):
             solv.add(Implies(pred[item_i][item_j], Or([  And(avoid_loops[item_i][k], Not(avoid_loops[item_j][k])) for k in range(al_max)  ])  ))
-    
+    print(123)
     return solv, pred, cour
 
 
@@ -191,7 +200,7 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
     #'default' approach searches the optimal solution using big_SAT_Solver
     if 'default' in approaches:
         solv, pred, cour = big_SAT_Solver(n, m, s, l)
-
+        print(203)
         # Time managing
         starting_time = time.time()
         timeout = starting_time + tot_time #Ending time
@@ -205,12 +214,14 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
 
             #Add the upper bound to the objective function
             for courier in range(m):
+                print(courier)
                 tmp_dist = [And(cour[courier][item], pred[item][item_2]) for item in range(n) for item_2 in range(n) for _ in range(D[item_2][item])]
                 tmp_dist += [pred[item][n+courier] for item in range(n) for _ in range(D[n][item])]
                 tmp_dist += [pred[n+courier][item] for item in range(n) for _ in range(D[item][n])]
                 solv.add(at_most_k(tmp_dist, best_obj-1))
-           
-            if solv.check()==sat:
+            print(221)
+            if solv.check()==sat and time.time() < timeout:
+                print('check!')
                 # the problem is Satisfiable -> A new solution has been found. Update the best objective function's value, the corresponding solution and the time left.
                 tmp_model = solv.model()
                 item_pred, cour_item = [(i,j) for j in range(n+m) for i in range(n+m) if tmp_model.evaluate(pred[i][j])], [(i, j) for j in range(n) for i in range(m) if tmp_model.evaluate(cour[i][j])] 
@@ -230,9 +241,16 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                 solutions['default'] = {'time' : 300 , 'optimal' : False , 'obj' : best_obj, 'sol' : sf.solution_maker(item_pred, cour_item, n, m)}
 
             else: 
-                # No new solutions, no solutions found at all and no more time -> it didn't find any solution in the given time. Save an empty solution
+                # No new solutions, no solutions found at all -> it didn't find any solution. Save an empty solution
                 solutions['default'] = {'time' : 300 , 'optimal' : False , 'obj' : 'N/A' , 'sol' : []}
                 stop = True   
+
+    if time.time() > timeout and best_obj != sf.up_bound(n,D) and not 'default' in list(solutions.keys()):
+        solutions['default'] = {'time' : 300 , 'optimal' : False , 'obj' : best_obj, 'sol' : sf.solution_maker(item_pred, cour_item, n, m)}
+
+
+
+
 
     #'clustering' approach creates clusters, orders them using small_SAT_Solver, creates a new distance matrix and a new items' weights array and perform a 'default'
     # search on the reduced problem. 

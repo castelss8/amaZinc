@@ -1,0 +1,8 @@
+{
+    "default": {
+        "time": 300,
+        "optimal": false,
+        "obj": "N/A",
+        "sol": []
+    }
+}

@@ -37,7 +37,7 @@ def run(
     #call the differents models
     #control 
     for inst in inst_list:
-        print(type(inst))
+        #print(type(inst))
         if model_name == "CP_Gecode_1":
             sol_tmp = CP_runner(inst['inst'], inst['n'], inst['m'], "Gecode", "IndomainRandom")
             sol.append(sol_tmp)
