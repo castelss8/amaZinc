@@ -96,6 +96,7 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
         obj = int(find_between(best_solution["output"]["default"],"distance = ", str("\n")))
 
         for i in range(1, m+1):
+            print(n, m, i, len(pred), pred)
             k = int(pred[n+m+i-1])
             while int(k)<(n+1):
                 sol[i-1]=[k]+sol[i-1]
