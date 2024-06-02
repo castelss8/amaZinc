@@ -87,14 +87,12 @@ def MIP_MCP(n, m, s, l, D, approaches: list, total_time=300):
     model, cour_pred, max_dist = MIP_Model(n, m, s, l, D, emphasis=emphasis)
     
     solutions = {}
-    
-    # Time Limit of 5 minutes
 
     initial_time = time.time()
 
-    status = model.optimize(max_seconds=300)    
+    print('aaaa')
 
-    
+    status = model.optimize(max_seconds=300)    
 
     final_time = min(300, time.time()-initial_time)
 

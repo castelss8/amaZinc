@@ -18,7 +18,7 @@ MODELS = ["CP_Gecode_1", "CP_Gecode_2", "CP_Gecode_3",
           "CP_Chuffed_1", "CP_Chuffed_2",
           "SAT_Normal","SAT_Cluster", 
           "MIP_Gurobi_DefaultSetting", "MIP_Gurobi_Feasibility", "MIP_Gurobi_Optimality", "MIP_Gurobi_Buonding",
-          "MIP_2_DefaultSetting", "MIP_2_Feasibility", "MIP_2_Optimality"
+          "MIP_2_DefaultSetting", "MIP_2_Feasibility", "MIP_2_Optimality",
           "SMT_Normal", "SMT_Cluster" ]
 
 #function to get the function based on the model name
