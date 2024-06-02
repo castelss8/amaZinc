@@ -4,8 +4,8 @@ import numpy as np
 from functions import sol_functions as sf
 from functions import clustering as cl
 import copy
-
 import numpy as np
+
 
 '''
     Defining the creation of the model for the default approach
@@ -82,13 +82,55 @@ def MIP_Model(n, m, s, l, D, focus):
     
     model.update()
 
+    '''
     #Constraint for the distance of each courier
     for courier in range(m):
         model.addConstr(dist_vector[courier] - (quicksum((pred[item][n+courier]) * D[n][item] for item in range(n))+
                                                 quicksum((pred[n+courier][item]) * D[item][n] for item in range(n))+
                                                 quicksum((cour[courier][i] * pred[i][j]) * D[j][i] for i in range(n) for j in range(n))) == 0, 
                                                 f"dist_vector_{courier}")
+    '''
+    # nuova variabile decisionale
+    prod = {}
+    for courier in range(m):
+        for i in range(n):
+            for j in range(n):
+                prod[courier, i, j] = model.addVar(vtype=GRB.BINARY, name=f"prod_{courier}_{i}_{j}")
+    model.update()
+
+    '''
+    prod[courier, i, j] rappresenta il prodotto delle variabili decisionali cour[courier][i] e pred[i][j] => linearization
+    '''
+
+    # nuovi vincoli
+    for courier in range(m):
+        for i in range(n):
+            for j in range(n):
+                model.addConstr(prod[courier, i, j] <= cour[courier][i], f"prod_courier_{courier}_i_{i}_j_{j}_1")
+                model.addConstr(prod[courier, i, j] <= pred[i][j], f"prod_courier_{courier}_i_{i}_j_{j}_2")
+                model.addConstr(prod[courier, i, j] >= cour[courier][i] + pred[i][j] - 1, f"prod_courier_{courier}_i_{i}_j_{j}_3")
+                model.addConstr(prod[courier, i, j] >= 0, f"prod_courier_{courier}_i_{i}_j_{j}_4")
+
+    '''
+    prod[courier, i, j] <= cour[courier][i]: Questo vincolo assicura che prod[courier, i, j] non possa essere 1 a meno che cour[courier][i] non sia 1. Se cour[courier][i] è 0, allora prod[courier, i, j] deve essere 0.
+
+    prod[courier, i, j] <= pred[i][j]: Analogamente, questo vincolo assicura che prod[courier, i, j] non possa essere 1 a meno che pred[i][j] non sia 1. Se pred[i][j] è 0, allora prod[courier, i, j] deve essere 0.
+
+    prod[courier, i, j] >= cour[courier][i] + pred[i][j] - 1: Questo vincolo assicura che prod[courier, i, j] debba essere 1 se sia cour[courier][i] che pred[i][j] sono 1. Se entrambe queste variabili sono 1, allora la somma cour[courier][i] + pred[i][j] sarà 2, e quindi prod[courier, i, j] deve essere almeno 1.
+
+    prod[courier, i, j] >= 0: Questo vincolo assicura semplicemente che prod[courier, i, j] non possa essere negativo.
+
+    Insieme, questi vincoli assicurano che prod[courier, i, j] sia 1 se e solo se sia cour[courier][i] che pred[i][j] sono 1, che è esattamente il comportamento che ci aspettiamo dal prodotto di queste due variabili.   
+    '''
     
+    # Modifica il vincolo originale
+    for courier in range(m):
+        model.addConstr(dist_vector[courier] - (quicksum((pred[item][n+courier]) * D[n][item] for item in range(n))+
+                                                quicksum((pred[n+courier][item]) * D[item][n] for item in range(n))+
+                                                quicksum((prod[courier, i, j]) * D[j][i] for i in range(n) for j in range(n))) == 0, 
+                                                f"dist_vector_{courier}")
+    
+
     #Constraint for the max distance: takes the maximum value of dist_vector
     max_dist = model.addVar(vtype=GRB.INTEGER, name="max_dist")
     model.update()
