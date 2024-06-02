@@ -1,4 +1,5 @@
 # Indicate the Gurobi reference image
+FROM gurobi/optimizer:latest
 FROM gurobi/python:latest as gurobi
 FROM minizinc/minizinc:latest
 
@@ -20,6 +21,7 @@ RUN apt-get update \
 # Create a virtual environment and activate it
 RUN python3 -m venv venv
 ENV PATH="/src/venv/bin:$PATH"
+ENV GRB_LICENSE_FILE="/src/gurobi.lic"
 
 ADD requirements.txt ./src/requirements.txt
 RUN pip3 install --no-cache-dir -v -r requirements.txt
