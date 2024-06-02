@@ -1,8 +1,4 @@
 from z3 import *
-
-import numpy as np
-from itertools import combinations
-from importlib import reload
 from functions.create_output import MODELS
 from functions.create_output import run as run
 from functions import Instances_Reader as IR
@@ -18,11 +14,11 @@ def run_project():
     print("--- Choose the solving approach: ---\n")
     #modify name of the models
     for i, model_name in enumerate(MODELS):
-        print(f"Press {i} for: {model_name}")    
+        print(f"Press {i} for:\t{model_name}")    
     index = int(input())
 
     model_name = MODELS[index]
-    print(f"--- Choose the instances [01:21] ---")
+    print(f"--- Choose the instances [1:21] ---")
     print(f"\n~~ A number, a comma separated list or 'all'~~")
 
     instances = input()

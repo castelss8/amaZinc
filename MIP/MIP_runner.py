@@ -185,7 +185,7 @@ def MIP_Model_Clustering(n, D):
 
 
 
-def MIP_MCP(n, m, s, l, D, approaches: list, focus=0, total_time=300):
+def MIP_MCP(n, m, s, l, D, approaches: list = 'default', focus=0, total_time=300):
     
     solutions = {}
     

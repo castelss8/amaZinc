@@ -6,15 +6,19 @@ It will run the model on the instance and save the output in the output file, in
 
 from CP.CP_runner import run_CP_model as CP_runner
 from SAT.SAT_Model import SAT_MCP as SAT_runner
-from MIP.MIP_Model import MIP_MCP as MIP_runner
+from MIP.MIP_Model import MIP_MCP as MIP_model
+from MIP.MIP_runner import MIP_MCP as MIP_runner
 from SMT.SMT_Model_Int import SMT_MCP as SMT_runner
 from functions.Instances_Reader import inst_read as IR
 from functions.create_json import create_json as CJ
 
 import pathlib as path
 
-MODELS = ["CP_Gecode_1", "CP_Gecode_2", "CP_Gecode_3", "CP_Chuffed_1", 
-          "CP_Chuffed_2","SAT_Normal","SAT_Cluster", "MIP_DefaultSetting", "MIP_Feasibility", "MIP_Optimality"
+MODELS = ["CP_Gecode_1", "CP_Gecode_2", "CP_Gecode_3",
+          "CP_Chuffed_1", "CP_Chuffed_2",
+          "SAT_Normal","SAT_Cluster", 
+          "MIP_Gurobi_DefaultSetting", "MIP_Gurobi_Feasibility", "MIP_Gurobi_Optimality", "MIP_Gurobi_Buonding",
+          "MIP_2_DefaultSetting", "MIP_2_Feasibility", "MIP_2_Optimality"
           "SMT_Normal", "SMT_Cluster" ]
 
 #function to get the function based on the model name
@@ -66,16 +70,32 @@ def run(
             sol_tmp = SAT_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'clustering')
             sol.append(sol_tmp)
             CJ(sol_tmp, res_folder, model_name, inst['inst'])
-        elif model_name == "MIP_DefaultSetting":
-            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'DefaultSetting')
+        elif model_name == "MIP_Gurobi_DefaultSetting":
+            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],focus=0)
             sol.append(sol_tmp)
             CJ(sol_tmp, res_folder, model_name, inst['inst'])
-        elif model_name == "MIP_Feasibility":
-            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'Feasibility')
+        elif model_name == "MIP_Gurobi_Feasibility":
+            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],focus=1)
             sol.append(sol_tmp)
             CJ(sol_tmp, res_folder, model_name, inst['inst'])
-        elif model_name == "MIP_Optimality":
-            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'Optimality')
+        elif model_name == "MIP_Gurobi_Optimality":
+            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],focus=2)
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
+        elif model_name == "MIP_Gurobi_Buonding":
+            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],focus=3)
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
+        elif model_name == "MIP_2_DefaultSetting":
+            sol_tmp = MIP_model(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'DefaultSetting')
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
+        elif model_name == "MIP_2_Feasibility":
+            sol_tmp = MIP_model(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'Feasibility')
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
+        elif model_name == "MIP_2_Optimality":
+            sol_tmp = MIP_model(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'Optimality')
             sol.append(sol_tmp)
             CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "SMT_Normal":
