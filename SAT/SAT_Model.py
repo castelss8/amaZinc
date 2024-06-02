@@ -245,10 +245,8 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                 solutions['default'] = {'time' : 300 , 'optimal' : False , 'obj' : 'N/A' , 'sol' : []}
                 stop = True   
 
-    if time.time() > timeout and best_obj != sf.up_bound(n,D) and not 'default' in list(solutions.keys()):
-        solutions['default'] = {'time' : 300 , 'optimal' : False , 'obj' : best_obj, 'sol' : sf.solution_maker(item_pred, cour_item, n, m)}
-
-
+        if time.time() > timeout and best_obj != sf.up_bound(n,D) and not 'default' in list(solutions.keys()):
+            solutions['default'] = {'time' : 300 , 'optimal' : False , 'obj' : best_obj, 'sol' : sf.solution_maker(item_pred, cour_item, n, m)}
 
 
 
@@ -262,9 +260,10 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
 
         starting_time = time.time()
         timeout = starting_time + 60*5
-
+        print(real_clusters)
         for it in range(len(real_clusters)):
             cluster = real_clusters[it]
+            print(real_clusters[it])
             n_cluster = len(cluster)
             timeout_for_clustering = starting_time + 60*1*((it+1)/len(real_clusters))
             check_timeout_for_clustering = timeout_for_clustering-time.time() #Time left for this cluster
@@ -288,7 +287,8 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
 
                 #Add the upper bound to the objective function
                 tmp_dist = [pred[item][item_2] for item in range(n_cluster) for item_2 in range(n_cluster) for _ in range(D_clus[item_2][item])]
-                solv.add(at_most_k(tmp_dist, best_obj-1))
+                if len(tmp_dist)>0:
+                    solv.add(at_most_k(tmp_dist, best_obj-1))
                 
                 if solv.check()==sat:
                 # the problem is Satisfiable -> A new solution has been found. Update the best objective function's value, the corresponding solution and the time left.
@@ -300,6 +300,11 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                         best_obj=tmp_obj
                     check_timeout_for_clustering = timeout_for_clustering-time.time() #Time left
                     solv.pop()
+                    if best_obj==0:
+                        cluster_copy=copy.deepcopy(cluster)
+                        cluster_copy.append(-1)
+                        clusters_paths.append([(cluster_copy[i],cluster_copy[j]) for i in range(n_cluster+1) for j in range(n_cluster+1) if best_model.evaluate(pred[i][j])])
+                        stop = True
                 elif best_obj != sf.up_bound(n_cluster, D_clus): 
                     #No new solutions, one solution stored. Save the best solution found.
                     cluster_copy=copy.deepcopy(cluster)
@@ -343,12 +348,13 @@ def SAT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                     D_new[-1].append( D[first_items_for_clusters[i]][last_item_for_clusters[j]] )
 
         # Recursively call SAT_MCP with default approach to solve the simplified istance
-        big_sol = SAT_MCP(n_new, m, s_clusters, l, D_new, ['default'], timeout)
+        time_for_main_search = int(timeout-time.time())
+        big_sol = SAT_MCP(n_new, m, s_clusters, l, D_new, ['default'], time_for_main_search)
 
         #Save the complete solution
         if big_sol['default']['sol'] != []:
             sol = sf.solution_maker_cluster(clusters, clusters_paths, first_items_for_clusters, big_sol['default']['sol'], m) 
-            solutions['clustering'] = {'time' : int(time.time() - starting_time) , 'optimal' : False , 'obj' : sf.obj_fun_from_solution(sol, n, D) , 'sol' : sol}
+            solutions['clustering'] = {'time' : min(int(time.time() - starting_time), 300) , 'optimal' : False , 'obj' : sf.obj_fun_from_solution(sol, n, D) , 'sol' : sol}
         
         else:
             solutions['clustering'] = {'time' : 300 , 'optimal' : False , 'obj' : 'N/A' , 'sol' : []}
