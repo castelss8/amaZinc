@@ -11,6 +11,7 @@ from MIP.MIP_runner import MIP_MCP as MIP_runner
 from SMT.SMT_Model_Int import SMT_MCP as SMT_runner
 from functions.Instances_Reader import inst_read as IR
 from functions.create_json import create_json as CJ
+from datetime import datetime
 
 import pathlib as path
 
@@ -26,8 +27,6 @@ def run(
         model_name: str,
         instances : str,
         res_folder: path.Path,
-        output_graph: bool = True,
-        graph_folder: path.Path = path.Path("graph")
 ):
     inst_list = []
     instances = instances.split(',')
@@ -40,7 +39,10 @@ def run(
 
     #call the differents models
     #control 
+
     for inst in inst_list:
+        print(f"Running {model_name} for the instance {inst['inst']}.\nStart Time: ", datetime.now().time().strftime('%H:%M:%S'))
+        
         #print(type(inst))
         if model_name == "CP_Gecode_1":
             sol_tmp = CP_runner(inst['inst'], inst['n'], inst['m'], "Gecode", "IndomainRandom")
@@ -109,24 +111,14 @@ def run(
         else:
             print(f"Model {model_name} not recognized.")
                 # Check model_name
+        print("End Time: ", datetime.now().time().strftime('%H:%M:%S'))
         
-        if 'Normal' in model_name:
-            d_key = 'default'
-        elif 'Cluster' in model_name:
-            d_key = 'clustering'
-        elif 'DefaultSetting' in model_name:
-            d_key = 'DefaultSetting'
-        elif 'Feasibility' in model_name:
-            d_key = 'Feasibility'
-        elif 'Optimality' in model_name:
-            d_key = 'Optimality'
-        
-        '''
-        if model_name in ["SAT_Normal","SAT_Cluster", "MIP_DefaultSetting", "MIP_Feasibility", "MIP_Optimality", "SMT_Normal", "SMT_Cluster"] and len(sol[-1][d_key]["sol"])>0: 
-            for i in range(len(sol[-1][d_key]["sol"])):
-                for j in range(len(sol[-1][d_key]["sol"][i])):
-                    sol[-1][d_key]["sol"][i][j] += 1
-        '''
+        print(f"sol_tmp: {sol_tmp}")
+        print(f"--------------------------------------------\n")
 
-    print(sol)
+    print("The solutions are saved in the res folder.")
+    #print each solution in one line
+    for sol in sol:
+        print(sol)
+    print("End of the run.\n")
     return

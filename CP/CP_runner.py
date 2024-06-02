@@ -56,8 +56,8 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
     with open(model_path, 'r') as f:
         pass
 
-    args = "minizinc --solver "+solver+" "+str(model_path)+" "+str(instance_path)+" --solver-time-limit 30000 --json-stream --output-time --intermediate"
-    print(args)
+    args = "minizinc --solver "+solver+" "+str(model_path)+" "+str(instance_path)+" --solver-time-limit 180000 --json-stream --output-time --intermediate"
+    #print(args)
 
 
     # read of json-stream
@@ -96,7 +96,7 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
         obj = int(find_between(best_solution["output"]["default"],"distance = ", str("\n")))
 
         for i in range(1, m+1):
-            print(n, m, i, len(pred), pred)
+            #print(n, m, i, len(pred), pred)
             k = int(pred[n+m+i-1])
             while int(k)<(n+1):
                 sol[i-1]=[k]+sol[i-1]
@@ -115,7 +115,7 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
             optimal = True
 
     # print of the dictionary
-    print({solver+"_"+search: {"time": time, "optimal": optimal, "obj": obj, "sol": sol}})
+    #print({solver+"_"+search: {"time": time, "optimal": optimal, "obj": obj, "sol": sol}})
 
 
 

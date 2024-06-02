@@ -20,7 +20,7 @@ There are eight different solvers to choose
 
 ---
 By:
-- Davide
-- Giorgia Castelli
-- Alice Fratini
-- Madalina Mone
+- Davide Bombardi davide.bombardi@studio.unibo.it
+- Giorgia Castelli giorgia.castelli2@studio.unibo.it
+- Alice Fratini alice.fratini2@studio.unibo.it
+- Madalina Ionela Mone madalina.mone@studio.unibo.it

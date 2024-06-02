@@ -54,5 +54,33 @@
                 1
             ]
         ]
+    },
+    "Gecode_IndomainMin_RelAndRec": {
+        "time": 300,
+        "optimal": false,
+        "obj": 226,
+        "sol": [
+            [
+                4,
+                1
+            ],
+            [
+                8,
+                9
+            ],
+            [
+                7,
+                2
+            ],
+            [
+                6
+            ],
+            [
+                5
+            ],
+            [
+                3
+            ]
+        ]
     }
 }

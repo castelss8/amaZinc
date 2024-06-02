@@ -182,7 +182,9 @@ def MIP_MCP(n, m, s, l, D, approaches: list = 'default', focus=0, total_time=300
     solutions = {}
 
     #MIPFocus parameter
+    model.setParam('OutputFlag', 0)
     model.setParam(GRB.Param.MIPFocus, focus)
+    
     
     model.optimize()
 

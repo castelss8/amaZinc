@@ -90,8 +90,6 @@ def MIP_MCP(n, m, s, l, D, approaches: list, total_time=300):
 
     initial_time = time.time()
 
-    print('aaaa')
-
     status = model.optimize(max_seconds=300)    
 
     final_time = min(300, time.time()-initial_time)
@@ -104,12 +102,12 @@ def MIP_MCP(n, m, s, l, D, approaches: list, total_time=300):
         item_pred_end = [(n+c, j) for j in range(n) for c in range(m) if cour_pred[c][n][j].x] 
         item_pred_still = [(n+c,n+c) for c in range(m) if cour_pred[c][n][n].x]
         item_pred = item_pred_start + item_pred_mid + item_pred_end + item_pred_still
-        print(item_pred)
+        #print(item_pred)
 
         tmp  = [(c, j) for i in range(n+1) for c in range(m) for j in range(n+1) if cour_pred[c][i][j].x] 
         cour_item = [(c, i) for i in range(n) for c in range(m) for j in range(n+1) if cour_pred[c][i][j].x] 
-        print(cour_item)
-        print(tmp)
+        #print(cour_item)
+        #print(tmp)
         solutions[approaches] = {'time' : int(final_time) , 'optimal' : status == OptimizationStatus.OPTIMAL , 'obj' : int(model.objective_value), 'sol' : sf.solution_maker(item_pred, cour_item, n, m)}
     
     return solutions

@@ -26,5 +26,47 @@
                 3
             ]
         ]
+    },
+    "Gecode_IndomainMin_RelAndRec": {
+        "time": 300,
+        "optimal": false,
+        "obj": 206,
+        "sol": [
+            [
+                2
+            ],
+            [
+                1,
+                3
+            ]
+        ]
+    },
+    "Chuffed_Smallest": {
+        "time": 0,
+        "optimal": true,
+        "obj": 206,
+        "sol": [
+            [
+                2
+            ],
+            [
+                1,
+                3
+            ]
+        ]
+    },
+    "Chuffed_InputOrder": {
+        "time": 0,
+        "optimal": true,
+        "obj": 206,
+        "sol": [
+            [
+                2
+            ],
+            [
+                1,
+                3
+            ]
+        ]
     }
 }
