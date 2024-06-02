@@ -58,5 +58,65 @@
                 1
             ]
         ]
+    },
+    "Gurobi_Default": {
+        "time": 0,
+        "optimal": true,
+        "obj": 12,
+        "sol": [
+                [
+                5,
+                4,
+                2
+            ],
+            [
+                3,
+                7
+            ],
+            [
+                6,
+                1
+            ]
+        ]
+    },
+  "Gurobi_Feasibility": {
+        "time": 0,
+        "optimal": true,
+        "obj": 12,
+        "sol": [
+            [
+                5,
+                4,
+                2
+            ],
+            [
+                7,
+                3
+            ],
+            [
+                1,
+                6
+            ]
+        ]
+    },
+  "Gurobi_Optimality": {
+        "time": 0,
+        "optimal": true,
+        "obj": 12,
+        "sol": [
+            [
+                5,
+                6,
+                3
+            ],
+            [
+                4,
+                2
+            ],
+            [
+                7,
+                1
+            ]
+        ]
     }
 }
