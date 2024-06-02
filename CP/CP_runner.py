@@ -56,7 +56,7 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
     with open(model_path, 'r') as f:
         pass
 
-    args = "minizinc --solver "+solver+" "+str(model_path)+" "+str(instance_path)+" --solver-time-limit 300000 --json-stream --output-time --intermediate"
+    args = "minizinc --solver "+solver+" "+str(model_path)+" "+str(instance_path)+" --solver-time-limit 30000 --json-stream --output-time --intermediate"
     print(args)
 
 
@@ -65,7 +65,7 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
     results = []
 
     minizinc_output = os.popen(args).readlines()
-    print('popen')
+    #print('popen')
 
     for i in minizinc_output:
         try:

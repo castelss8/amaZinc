@@ -1,0 +1,26 @@
+{
+    "Gecode_IndomainRandom": {
+        "time": 300,
+        "optimal": false,
+        "obj": "N/A",
+        "sol": []
+    },
+    "Gecode_IndomainRandom_RelAndRec": {
+        "time": 300,
+        "optimal": false,
+        "obj": "N/A",
+        "sol": []
+    },
+    "Gecode_IndomainMin_RelAndRec": {
+        "time": 300,
+        "optimal": false,
+        "obj": "N/A",
+        "sol": []
+    },
+    "Chuffed_Smallest": {
+        "time": 300,
+        "optimal": false,
+        "obj": "N/A",
+        "sol": []
+    }
+}
