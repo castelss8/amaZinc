@@ -9,13 +9,21 @@ def create_json(solution, res_folder, model_name, istance_n):
         d_key = 'clustering'
     elif 'DefaultSetting' in model_name:
         d_key = 'DefaultSetting'
+    elif model_name == 'MIP_Gurobi_DefaultSetting':
+        d_key = 'Gurobi_Default'
     elif 'Feasibility' in model_name:
         d_key = 'Feasibility'
+    elif model_name == 'MIP_Gurobi_Feasibility':
+        d_key = 'Gurobi_Feasibility'
     elif 'Optimality' in model_name:
         d_key = 'Optimality'
+    elif model_name == 'MIP_Gurobi_Optimality':
+        d_key = 'Gurobi_Optimality'
+    elif model_name == 'MIP_Gurobi_Bounding':
+        d_key = 'Gurobi_Bounding'
 
     if model_name in ["SAT_Normal","SAT_Cluster", "MIP_Gurobi_DefaultSetting", "MIP_Gurobi_Feasibility", "MIP_Gurobi_Optimality",
-                       "MIP_Gurobi_Buonding", "MIP_2_DefaultSetting", "MIP_2_Feasibility", "MIP_2_Optimality", 
+                       "MIP_Gurobi_Bounding", "MIP_2_DefaultSetting", "MIP_2_Feasibility", "MIP_2_Optimality", 
                        "SMT_Normal", "SMT_Cluster"]:
         if len(solution[d_key]["sol"])>0: 
             for i in range(len(solution[d_key]["sol"])):

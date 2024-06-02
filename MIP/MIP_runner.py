@@ -168,11 +168,11 @@ def MIP_MCP(n, m, s, l, D, approaches: list = 'default', focus=0, total_time=300
     if focus == 0:
         json_name = "Gurobi_Default"
     elif focus == 1:
-        json_name = "Gurobi_Feasible"
+        json_name = "Gurobi_Feasibility"
     elif focus == 2:
-        json_name = "Gurobi_Optimal"
+        json_name = "Gurobi_Optimality"
     elif focus == 3:
-        json_name = "Gurobi_Bound"
+        json_name = "Gurobi_Bounding"
 
 
     gp.setParam("TimeLimit", total_time) #Time Limit of 5 minutes
