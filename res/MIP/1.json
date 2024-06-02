@@ -16,20 +16,20 @@
             ]
         ]
     },
-    "default": {
-        "time": 0,
+    "Feasibility": {
+        "time": 1,
         "optimal": true,
         "obj": 14,
         "sol": [
             [
-                0,
-                2,
-                3
+                4,
+                3,
+                1
             ],
             [
-                1,
-                4,
-                5
+                2,
+                5,
+                6
             ]
         ]
     }

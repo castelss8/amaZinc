@@ -14,7 +14,9 @@ def create_json(solution, res_folder, model_name, istance_n):
     elif 'Optimality' in model_name:
         d_key = 'Optimality'
 
-    if model_name in ["SAT_Normal","SAT_Cluster", "MIP_DefaultSetting", "MIP_Feasibility", "MIP_Optimality", "SMT_Normal", "SMT_Cluster"]:
+    if model_name in ["SAT_Normal","SAT_Cluster", "MIP_Gurobi_DefaultSetting", "MIP_Gurobi_Feasibility", "MIP_Gurobi_Optimality",
+                       "MIP_Gurobi_Buonding", "MIP_2_DefaultSetting", "MIP_2_Feasibility", "MIP_2_Optimality", 
+                       "SMT_Normal", "SMT_Cluster"]:
         if len(solution[d_key]["sol"])>0: 
             for i in range(len(solution[d_key]["sol"])):
                 for j in range(len(solution[d_key]["sol"][i])):
