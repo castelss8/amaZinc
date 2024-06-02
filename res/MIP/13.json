@@ -1,0 +1,20 @@
+{
+    "Feasibility": {
+        "time": 300,
+        "optimal": false,
+        "obj": "N/A",
+        "sol": []
+    },
+    "DefaultSetting": {
+        "time": 300,
+        "optimal": false,
+        "obj": "N/A",
+        "sol": []
+    },
+    "Optimality": {
+        "time": 300,
+        "optimal": false,
+        "obj": "N/A",
+        "sol": []
+    }
+}
