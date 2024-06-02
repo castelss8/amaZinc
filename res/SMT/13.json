@@ -6,7 +6,7 @@
         "sol": []
     },
     "clustering": {
-        "time": 44,
+        "time": 300,
         "optimal": false,
         "obj": 704,
         "sol": [
