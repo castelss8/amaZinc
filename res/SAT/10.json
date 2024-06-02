@@ -38,7 +38,7 @@
         ]
     },
     "clustering": {
-        "time": 21,
+        "time": 300,
         "optimal": false,
         "obj": 268,
         "sol": [
