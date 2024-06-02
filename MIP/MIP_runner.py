@@ -73,7 +73,7 @@ def MIP_Model(n, m, s, l, D, focus):
     model.update()
     for i in range(n):
         for j in range(n):
-            model.addConstr(avoid_loops[i]*pred[i][j] - avoid_loops[j]*pred[i][j] - pred[i][j] >= 0, f"avoid_loops_{i}_{j}")
+            model.addConstr(avoid_loops[i] - avoid_loops[j] >= n*(pred[i][j]) - n+1, f"avoid_loops_{i}_{j}")
     
     #Vector of distances for each courier
     dist_vector = []
@@ -142,47 +142,6 @@ def MIP_Model(n, m, s, l, D, focus):
 
     return model, pred, cour
 
-'''
-    Defining the creation of the model for the clustering approach
-'''
-
-def MIP_Model_Clustering(n, D):
-
-    #Model Initialization
-    model = gp.Model("MIP_Model_Gurobi_Clustering")
-    
-    '''
-    pred matrix
-    pred[i][j] = true if the j-th item is the predecessor of the i-th item  
-    '''
-    pred = model.addMVar(shape=(n+1, n+1), vtype=GRB.BINARY, name="pred")
-    model.update()
-    
-    #Each item/ending point has exactly one predecessor and each item/starting point is predecessor of exactly one other item. 
-    for i in range(n+1):
-        col_i = [pred[j][i] for j in range(n+1)]
-        model.addConstr(quicksum(col_i) == 1, f"PC_{i}")
-        model.addConstr(quicksum(pred[i]) == 1, f"PR_{i}")
-
-    #Vector to avoid loops, lenght n
-    avoid_loops = [model.addVar(lb=1, ub=n, vtype=GRB.INTEGER, name=f"avoid_loops") for _ in range(n)]
-    model.update()
-    for i in range(n):
-        for j in range(n):
-            model.addConstr(avoid_loops[i]*pred[i][j] - avoid_loops[j]*pred[i][j] - pred[i][j] >= 0, f"avoid_loops_{i}_{j}")
-
-    #vector of distances for each courier
-    dist = model.addVar(vtype=GRB.INTEGER, name="dist")
-    model.update()
-
-    #Constraint for the distance of each courier
-    model.addConstr(dist - quicksum((pred[i][j] * D[j][i] for i in range(n) for j in range(n))) == 0)
-
-    #Objective function: minimize the maximum distance
-    model.setObjective(dist, GRB.MINIMIZE)
-
-    return model, pred
-
 
 
 def MIP_MCP(n, m, s, l, D, approaches: list = 'default', focus=0, total_time=300):
@@ -206,100 +165,32 @@ def MIP_MCP(n, m, s, l, D, approaches: list = 'default', focus=0, total_time=300
     This is useful when its difficult proving that the optimal solution has been found.
 
     ''' 
+    if focus == 0:
+        json_name = "Gurobi_Default"
+    elif focus == 1:
+        json_name = "Gurobi_Feasible"
+    elif focus == 2:
+        json_name = "Gurobi_Optimal"
+    elif focus == 3:
+        json_name = "Gurobi_Bound"
 
-    if 'default' in approaches:
+
+    gp.setParam("TimeLimit", total_time) #Time Limit of 5 minutes
+        
+    model, pred, cour = MIP_Model(n,m,s,l,D, focus) 
+
+    solutions = {}
+
+    #MIPFocus parameter
+    model.setParam(GRB.Param.MIPFocus, focus)
     
-        gp.setParam("TimeLimit", total_time) # Time Limit of 5 minutes
-        
-        model, pred, cour = MIP_Model(n,m,s,l,D, focus)
-    
-        #MIPFocus parameter
-        model.setParam(GRB.Param.MIPFocus, focus)
-        
-        model.optimize()
+    model.optimize()
 
-        #Solutions Creation
-        if model.SolCount == 0: #no solution found
-            solutions['default'] = {'time' : 300 , 'optimal' : False , 'obj' : 'N/A' , 'sol' : []}
-        else: 
-            item_pred, cour_item = [(i,j) for j in range(n+m) for i in range(n+m) if pred.X[i][j]], [(i, j) for j in range(n) for i in range(m) if cour.X[i][j]] 
-            solutions['default'] = {'time' : int(model.Runtime) , 'optimal' : model.status == GRB.OPTIMAL , 'obj' : int(model.objVal), 'sol' : sf.solution_maker(item_pred, cour_item, n, m)}
-
-
-    if 'clustering' in approaches:
-    
-        clusters, s_clusters = cl.complete_clustering(D, s, n, m)
-
-        real_clusters = [cluster for cluster in clusters if len(cluster)>1]
-        clusters_paths=[]
-
-        time_used = 0
-
-        for it in range(len(real_clusters)):
-            cluster = real_clusters[it]
-            print('working on' , cluster)
-            n_cluster = len(cluster)
-
-            gp.setParam("TimeLimit", 60*1*((it+1)/len(real_clusters))) #1 minute for all clusters
-            
-            D_clus=[]
-            for i in cluster:
-                D_clus.append([])
-                for j in cluster:
-                    D_clus[-1].append(D[i][j])
-                D_clus[-1].append(0)
-            D_clus.append([0 for k in range(n_cluster+1)])
-
-            model, pred = MIP_Model_Clustering(n_cluster, D_clus)
-            model.optimize()
-
-            time_used += model.Runtime
-
-            if model.SolCount == 0:
-                cluster_copy=copy.deepcopy(cluster)
-                cluster_copy.append(-1)
-                cluster_copy[:0] = [-1]
-                clusters_paths.append([(cluster_copy[i],cluster_copy[i+1]) for i in range(n_cluster+1)])
-            else: 
-                cluster_copy=copy.deepcopy(cluster)
-                cluster_copy.append(-1)
-                clusters_paths.append([(cluster_copy[i],cluster_copy[j]) for i in range(n_cluster+1) for j in range(n_cluster+1) if pred.X[i][j]])
-
-        n_new = len(clusters)-1
-
-        first_items_for_clusters=[]
-        last_item_for_clusters=[]
-
-        i=0
-        for clus in clusters:
-            if len(clus)>1:
-                path=clusters_paths[i]
-                for couple in path:
-                    if couple[0]==-1:
-                        last_item_for_clusters.append(couple[1])
-                    elif couple[1]==-1:
-                        first_items_for_clusters.append(couple[0])
-                i+=1
-            else:
-                last_item_for_clusters.append(clus[0])
-                first_items_for_clusters.append(clus[0])
-
-        D_new=[]
-        for i in range(n_new+1):
-            D_new.append([])
-            for j in range(n_new+1):
-                if j==i:
-                    D_new[-1].append(0)
-                else:
-                    D_new[-1].append( D[first_items_for_clusters[i]][last_item_for_clusters[j]])
-        
-        big_sol = MIP_MCP(n_new,m,s,l,D_new, ['default'], total_time=300-time_used, focus=0)
-        
-        #Solutions Creation
-        if big_sol['default']['sol'] != []:
-            sol = sf.solution_maker_cluster(clusters, clusters_paths, first_items_for_clusters, big_sol['default']['sol'], m)
-            solutions['clustering'] = {'time' : big_sol['default']['time']+time_used, 'optimal' : False, 'obj' : sf.obj_fun_from_solution(sol, n, D), 'sol' : sol} 
-        else:
-            solutions['clustering'] = {'time' : 300 , 'optimal' : False , 'obj' : 'N/A' , 'sol' : []}
+    #Solutions Creation
+    if model.SolCount == 0: #no solution found
+        solutions[json_name] = {'time' : 300 , 'optimal' : False , 'obj' : 'N/A' , 'sol' : []}
+    else: 
+        item_pred, cour_item = [(i,j) for j in range(n+m) for i in range(n+m) if pred.X[i][j]], [(i, j) for j in range(n) for i in range(m) if cour.X[i][j]] 
+        solutions[json_name] = {'time' : int(model.Runtime) , 'optimal' : model.status == GRB.OPTIMAL , 'obj' : int(model.objVal), 'sol' : sf.solution_maker(item_pred, cour_item, n, m)}
 
     return solutions
