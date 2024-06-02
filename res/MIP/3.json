@@ -1,21 +1,21 @@
 {
-    "default": {
-        "time": 0,
+    "DefaultSetting": {
+        "time": 2,
         "optimal": true,
         "obj": 12,
         "sol": [
             [
-                3,
+                5,
                 6,
-                5
+                3
             ],
             [
                 2,
                 4
             ],
             [
-                1,
-                7
+                7,
+                1
             ]
         ]
     }

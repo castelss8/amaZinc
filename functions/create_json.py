@@ -4,14 +4,21 @@ import os
 def create_json(solution, res_folder, model_name, istance_n):
 
     if 'Normal' in model_name:
-         d_key = 'default'
-    else:
+        d_key = 'default'
+    elif 'Cluster' in model_name:
         d_key = 'clustering'
+    elif 'DefaultSetting' in model_name:
+        d_key = 'DefaultSetting'
+    elif 'Feasibility' in model_name:
+        d_key = 'Feasibility'
+    elif 'Optimality' in model_name:
+        d_key = 'Optimality'
 
-    if model_name in ["SAT_Normal","SAT_Cluster", "MIP_Normal", "MIP_Cluster", "SMT_Normal", "SMT_Cluster"] and len(solution[d_key]["sol"])>0: 
-        for i in range(len(solution[d_key]["sol"])):
-            for j in range(len(solution[d_key]["sol"][i])):
-                solution[d_key]["sol"][i][j] += 1
+    if model_name in ["SAT_Normal","SAT_Cluster", "MIP_DefaultSetting", "MIP_Feasibility", "MIP_Optimality", "SMT_Normal", "SMT_Cluster"]:
+        if len(solution[d_key]["sol"])>0: 
+            for i in range(len(solution[d_key]["sol"])):
+                for j in range(len(solution[d_key]["sol"][i])):
+                    solution[d_key]["sol"][i][j] += 1
 
 
     #create res folder if doesn't exist

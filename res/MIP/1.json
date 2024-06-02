@@ -1,6 +1,6 @@
 {
-    "default": {
-        "time": 0,
+    "DefaultSetting": {
+        "time": 1,
         "optimal": true,
         "obj": 14,
         "sol": [

@@ -6,7 +6,7 @@ It will run the model on the instance and save the output in the output file, in
 
 from CP.CP_runner import run_CP_model as CP_runner
 from SAT.SAT_Model import SAT_MCP as SAT_runner
-from MIP.MIP_runner import MIP_MCP as MIP_runner
+from MIP.MIP_Model import MIP_MCP as MIP_runner
 from SMT.SMT_Model_Int import SMT_MCP as SMT_runner
 from functions.Instances_Reader import inst_read as IR
 from functions.create_json import create_json as CJ
@@ -14,7 +14,7 @@ from functions.create_json import create_json as CJ
 import pathlib as path
 
 MODELS = ["CP_Gecode_1", "CP_Gecode_2", "CP_Gecode_3", "CP_Chuffed_1", 
-          "CP_Chuffed_2","SAT_Normal","SAT_Cluster", "MIP_Normal", "MIP_Cluster",
+          "CP_Chuffed_2","SAT_Normal","SAT_Cluster", "MIP_DefaultSetting", "MIP_Feasibility", "MIP_Optimality"
           "SMT_Normal", "SMT_Cluster" ]
 
 #function to get the function based on the model name
@@ -66,14 +66,16 @@ def run(
             sol_tmp = SAT_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'clustering')
             sol.append(sol_tmp)
             CJ(sol_tmp, res_folder, model_name, inst['inst'])
-        elif model_name == "MIP_Normal":
-            # Uncomment the following line when MIP_runner is available
-            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'default')
+        elif model_name == "MIP_DefaultSetting":
+            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'DefaultSetting')
             sol.append(sol_tmp)
             CJ(sol_tmp, res_folder, model_name, inst['inst'])
-        elif model_name == "MIP_Cluster":
-            # Uncomment the following line when MIP_runner is available
-            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'clustering')
+        elif model_name == "MIP_Feasibility":
+            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'Feasibility')
+            sol.append(sol_tmp)
+            CJ(sol_tmp, res_folder, model_name, inst['inst'])
+        elif model_name == "MIP_Optimality":
+            sol_tmp = MIP_runner(inst['n'], inst['m'], inst['s'], inst['l'], inst['D'],'Optimality')
             sol.append(sol_tmp)
             CJ(sol_tmp, res_folder, model_name, inst['inst'])
         elif model_name == "SMT_Normal":
@@ -90,14 +92,21 @@ def run(
         
         if 'Normal' in model_name:
             d_key = 'default'
-        else:
+        elif 'Cluster' in model_name:
             d_key = 'clustering'
-
-        if model_name in ["SAT_Normal","SAT_Cluster", "MIP_Normal", "MIP_Cluster", "SMT_Normal", "SMT_Cluster"] and len(sol[-1][d_key]["sol"])>0: 
+        elif 'DefaultSetting' in model_name:
+            d_key = 'DefaultSetting'
+        elif 'Feasibility' in model_name:
+            d_key = 'Feasibility'
+        elif 'Optimality' in model_name:
+            d_key = 'Optimality'
+        
+        '''
+        if model_name in ["SAT_Normal","SAT_Cluster", "MIP_DefaultSetting", "MIP_Feasibility", "MIP_Optimality", "SMT_Normal", "SMT_Cluster"] and len(sol[-1][d_key]["sol"])>0: 
             for i in range(len(sol[-1][d_key]["sol"])):
                 for j in range(len(sol[-1][d_key]["sol"][i])):
                     sol[-1][d_key]["sol"][i][j] += 1
-
+        '''
 
     print(sol)
     return
