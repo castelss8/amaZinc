@@ -2,21 +2,21 @@
     "default": {
         "time": 0,
         "optimal": true,
-        "obj": 206,
+        "obj": 12,
         "sol": [
             [
-                2
+                3,
+                6,
+                5
+            ],
+            [
+                2,
+                4
             ],
             [
                 1,
-                3
+                7
             ]
         ]
-    },
-    "clustering": {
-        "time": 300,
-        "optimal": false,
-        "obj": "N/A",
-        "sol": []
     }
 }
