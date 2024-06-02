@@ -4,6 +4,25 @@ import math
 import re
 from pathlib import Path
 
+'''
+    input:
+        instance: int = number of the instance
+        n: int = number of items as defined in instance
+        m: int = number of couriers as defined in instance
+        solver: str = solver to be used in the run ("Gecode" or "Chuffed")
+        search: str = search strategy to be used in the run;
+                        for solver = "Gecode":
+                            - "IndomainRandom"
+                            - "IndomainRandom_RelAndRec"
+                            - "IndomainMin_RelAndRec"
+                        for solver = "Chuffed":
+                            - "Smallest"
+                            - "InputOrder"
+
+    output: dictionary to be used in "res\CP\inst.json" for solution for the model, as described in the project description
+'''
+
+
 # util function for manipulating strings 
 
 def find_between(s: str, first: str, last: str):
@@ -13,23 +32,7 @@ def find_between(s: str, first: str, last: str):
 
 
 # function running the CP model on a specific instance, whith a specific solver and a specific search strategy
-'''
-        input:
-            instance: int = number of the instance
-            n: int = number of items as defined in instance
-            m: int = number of couriers as defined in instance
-            solver: str = solver to be used in the run ("Gecode" or "Chuffed")
-            search: str = search strategy to be used in the run;
-                            for solver = "Gecode":
-                                - "IndomainRandom"
-                                - "IndomainRandom_RelAndRec"
-                                - "IndomainMin_RelAndRec"
-                            for solver = "Chuffed":
-                                - "Smallest"
-                                - "InputOrder"
 
-        output: dictionary to be used in "res\CP\inst.json" for solution for the model, as described in the project description
-'''
 def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
     
     # instance path
@@ -38,7 +41,6 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
     else:
         instance_path = Path("./CP/Preprocessed_Instances/inst"+str(instance)+".dzn")
     
-
     # model path
 
     if solver == "Gecode" and search == "IndomainRandom":
@@ -56,16 +58,13 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
     with open(model_path, 'r') as f:
         pass
 
-    args = "minizinc --solver "+solver+" "+str(model_path)+" "+str(instance_path)+" --solver-time-limit 180000 --json-stream --output-time --intermediate"
-    #print(args)
-
+    args = "minizinc --solver "+solver+" "+str(model_path)+" "+str(instance_path)+" --solver-time-limit 300000 --json-stream --output-time --intermediate"
 
     # read of json-stream
 
     results = []
 
     minizinc_output = os.popen(args).readlines()
-    #print('popen')
 
     for i in minizinc_output:
         try:
@@ -77,7 +76,6 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
     
     solutions = [j for j in results if j["type"] == "solution"]
 
-
     # case when no solution is found in 300 seconds - defines all outputs
     
     if len(solutions) == 0:
@@ -85,9 +83,9 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
         optimal = False
         obj = "N/A"
         sol = []
-
     
     # all other cases - defines obj: int = best found value for objective function; defines sol: list of list = best solution found
+
     elif len(solutions) > 0:
         sol = [[] for i in range (1,m+1)]
 
@@ -96,12 +94,10 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
         obj = int(find_between(best_solution["output"]["default"],"distance = ", str("\n")))
 
         for i in range(1, m+1):
-            #print(n, m, i, len(pred), pred)
             k = int(pred[n+m+i-1])
             while int(k)<(n+1):
                 sol[i-1]=[k]+sol[i-1]
                 k = int(pred[k-1])
-
 
     # all other cases - defines time: int = running time (in seconds); defines optimal: bool = false iff time = 300 iff the model couldn't prove that sol is optimal    
         
@@ -113,10 +109,5 @@ def run_CP_model(instance: int, n: int, m: int, solver: str, search: str):
         else:
             time = math.floor(int(optimal_solution[-1]["time"])/1000)
             optimal = True
-
-    # print of the dictionary
-    #print({solver+"_"+search: {"time": time, "optimal": optimal, "obj": obj, "sol": sol}})
-
-
 
     return {solver+"_"+search: {"time": time, "optimal": optimal, "obj": obj, "sol": sol}}

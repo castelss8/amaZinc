@@ -29,6 +29,7 @@ def run_project():
 
     print(f"Model name: {model_name}")
     print(f"Instances: {instances}")
+    print(f"--------------------------------------------\n")
     #print(res_folder)
 
     run(model_name,instances, res_folder)

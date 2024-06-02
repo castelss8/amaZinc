@@ -56,9 +56,9 @@
         "obj": 14,
         "sol": [
             [
-                4,
+                1,
                 3,
-                1
+                4
             ],
             [
                 2,
@@ -84,7 +84,24 @@
             ]
         ]
     },
-      "Gurobi_Optimality": {
+    "Gurobi_Optimality": {
+        "time": 0,
+        "optimal": true,
+        "obj": 14,
+        "sol": [
+            [
+                1,
+                3,
+                4
+            ],
+            [
+                2,
+                5,
+                6
+            ]
+        ]
+    },
+    "Gurobi_Bounding": {
         "time": 0,
         "optimal": true,
         "obj": 14,
@@ -102,4 +119,3 @@
         ]
     }
 }
-

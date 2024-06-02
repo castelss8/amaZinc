@@ -195,7 +195,6 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
             
             #Add the upper bound to the objective function
             for c in range(m):
-                print(m)
                 starting_point = [pred[item] == n+c for item in range(n)]
                 starting_point_distances = [D[n][item] for item in range(n)]
                 ending_point = [pred[n+c] == item for item in range(n)]
@@ -206,7 +205,6 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                 points  = starting_point + ending_point + mid_points
                 distances = starting_point_distances + ending_point_distances + mid_points_distances
                 solv.add(PbLe([ (points[i], distances[i]) for i in range(len(points)) ], best_obj-1))
-            print(205)
             if solv.check()==sat:
                 # the problem is Satisfiable -> A new solution has been found. Update the best objective function's value, the corresponding solution and the time left.
                 tmp_model = solv.model()
@@ -218,7 +216,6 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
                     best_obj=tmp_obj
                 check_timeout = timeout-time.time() #Time left
                 solv.pop()
-                print(best_obj)
 
             elif best_obj != sf.up_bound(n,D) and time.time() < timeout:
                 # No new solutions are found, one solution stored and there is still time -> it has found the optimal solution. Save the optimal solution.                
@@ -250,7 +247,6 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
 
         for it in range(len(real_clusters)):
             cluster = real_clusters[it]
-            print('working on' , cluster)
             n_cluster = len(cluster)
     
             timeout_for_clustering = starting_time + 60*1*((it+1)/len(real_clusters))
@@ -346,33 +342,3 @@ def SMT_MCP(n:int, m:int, s:list, l:list, D:list, approaches:list, tot_time = 30
             solutions['clustering'] = {'time' : 300 , 'optimal' : False , 'obj' : 'N/A' , 'sol' : []}
 
     return solutions
-
-
-        
-
-'''
-instance_n=5 #from 1 to 21
-
-if instance_n<10:
-    file_name='inst0'+str(instance_n)+'.dat'
-else:
-    file_name='inst'+str(instance_n)+'.dat'
-
-file = open('Documents/GitHub/Uni/amaZinc/SAT/Instances/inst04.dat')
-
-splitted_file = file.read().split('\n')
-
-m = int(splitted_file[0])
-n = int(splitted_file[1])
-l = list(map(int, splitted_file[2].split(' ')))
-tmp_sz=splitted_file[3].split(' ')
-if '' in tmp_sz:
-    s=list(map(int, [tmp_sz[i] for i in range(len(tmp_sz)) if tmp_sz[i]!='']))
-else:
-    s = list(map(int, splitted_file[3].split(' ')))
-D = [list(map(int, line.strip().split(' '))) for line in splitted_file[4:(n+5)]]
-
-print('Instance number '+str(instance_n)+': '+str(n)+' items and '+str(m)+' couriers.')
-
-print(SMT_MCP(n, m, s, l, D, ['default', 'clustering']))
-'''
